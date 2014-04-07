@@ -13,16 +13,16 @@ import javax.swing.ImageIcon;
  * @author Joe Pelz, Set A, A00893517
  * @version 1.0
  */
-enum Block {
+//enum Block {
     /** Background blocks, non colliding. */
-    bg,
+//    bg,
     /** Background light, non colliding. */
-    bgLight,
+//    bgLight,
     /** Background broken light, non colliding. */
-    bgLightDead,
+//    bgLightDead,
     /** Solid bricks, in the foreground. */
-    wall
-}
+//    wall
+//}
 
 /**
  * <p>This class represents a game world, randomely generated, 
@@ -47,43 +47,48 @@ public class World {
     private static final float LIGHT_PBTY = 0.02f;
     
     /** The world itself, in memory. */
-    private Block[][] world = new Block[WORLD_HEIGHT][WORLD_WIDTH];
+    private Texture[][] world = new Texture[WORLD_HEIGHT][WORLD_WIDTH];
 
     /** The icon to use for background tiles. */
-    private ImageIcon gBG;
+//    private ImageIcon gBG;
     /** The icon to use for background lights. */
-    private ImageIcon gBGLight;
+//    private ImageIcon gBGLight;
     /** The icon to use for broken background lights. */
-    private ImageIcon gBGLightDead;
+//    private ImageIcon gBGLightDead;
     /** The icon to use for solid bricks. */
-    private ImageIcon gWall;
+//    private ImageIcon gWall;
     /** The icon to use for extra-worldly tiles. */
-    private ImageIcon gEmpty;
+//    private ImageIcon gEmpty;
     /** The current icon to paint with. */
     private ImageIcon brush;
+    /** The texture pack to use. */
+    private TexturePack tp;
     
     /**
      * World constructor, to make a new world of the given dimensions.
      * @param width The number of blocks wide the world is
      * @param height The number of blocks high the world is
+     * @param texPack The texture set to use
      */
-    public World(int width, int height) {
+    public World(int width, int height, TexturePack texPack) {
+        tp = texPack;
+        
         for (int row = 0; row < world.length; row++) {
             for (int col = 0; col < world[0].length; col++) {
                 if (GEN.nextDouble() * row < BRICK_DENSITY) {
                     //solid bricks
-                    world[row][col] = Block.wall;
+                    world[row][col] = Texture.brick;
                 } else {
                     //background bricks
                     if (GEN.nextDouble() < LIGHT_PBTY) {
-                        world[row][col] = Block.bgLight;
+                        world[row][col] = Texture.bgLight;
                     } else {
-                        world[row][col] = Block.bg;
+                        world[row][col] = Texture.bg;
                     }
                 }
             }
         }
-        brush = gBG;
+        brush = tp.get(Texture.bg);
     }
     
     /**
@@ -93,14 +98,14 @@ public class World {
      * @param y The y coordinate to fetch.
      * @return The block type
      */
-    public Block getCell(int x, int y) {
+    public Texture getCell(int x, int y) {
         if (x >= 0 
                 && x < WORLD_WIDTH
                 && y >= 0
                 && y < WORLD_HEIGHT) {
             return world[y][x];
         }
-        return Block.bg;
+        return Texture.bg;
     }
     /**
      * If the block at the given coordinates is inside of bounds, 
@@ -109,7 +114,7 @@ public class World {
      * @param y The y coordinate to fetch.
      * @param type The type to set the block to
      */
-    public void setCell(int x, int y, Block type) {
+    public void setCell(int x, int y, Texture type) {
         if (x >= 0 
                 && x < WORLD_WIDTH
                 && y >= 0
@@ -179,6 +184,7 @@ public class World {
     public void draw(Graphics page, Component comp, int offsetX, int offsetY) {
         int x = 0;
         int y = 0;
+//        boolean isFun = false;
         
         int resolutionOffset = comp.getHeight() - CELL_SIZE;
 
@@ -209,26 +215,15 @@ public class World {
                         && row < world.length 
                         && col >= 0 
                         && col < world[0].length) {
-                    switch (world[row][col]) {
-                    case bg:
-                        brush = gBG;
-                        break;
-                    case bgLight:
-                        brush = gBGLight;
-                        break;
-                    case bgLightDead:
-                        brush = gBGLightDead;
-                        break;
-                    case wall:
-                        brush = gWall;
-                        break;
-                    default:
-                        brush = gBG;
-                        break;
-                    }
+                    brush = tp.get(world[row][col]);
+//                    if (world[row][col] == Texture.brick) {
+//                        isFun = true;
+//                    } else {
+//                        isFun = false;
+//                    }
                 //if brick is not in range, use the empty image
                 } else {
-                    brush = gEmpty;
+                    brush = tp.get(Texture.bg);
                 }
                 
                 x = (col - minX) * CELL_SIZE - subX;
@@ -236,31 +231,12 @@ public class World {
                 y = (y * -1) + (resolutionOffset);
 
                 //hehehehe.  Fun.
-                //x += gen.nextInt(3) - 1;
-                //y += gen.nextInt(3) - 1;
+//                if (isFun) {
+//                    x += GEN.nextInt(3) - 1;
+//                    y += GEN.nextInt(3) - 1;
+//                }
                 brush.paintIcon(comp, page, x, y);
             }
         }
-
-        //print coordinates:
-        //page.drawString("minX: " + minX, 20, 40);
-        //page.drawString("maxX: " + maxX, 20, 60);
-        //page.drawString("minY: " + minY, 100, 40);
-        //page.drawString("maxY: " + maxY, 100, 60);
-        
-    }
-
-    /**
-     * Sets the images to use for the world.
-     * @param tp The texture pack to use
-     */
-    public void setTextures(TexturePack tp) {
-        gBG = tp.getBG();
-        gBGLight = tp.getBGLight();
-        gBGLightDead = tp.getBGLightDead();
-        gWall = tp.getWall();
-        gEmpty = tp.getBG();
-        brush = tp.getBG();
-        
     }
 }

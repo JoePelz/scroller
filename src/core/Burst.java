@@ -33,7 +33,7 @@ public class Burst extends Drawable {
      */
     public Burst(TexturePack tp) {
         super();
-        super.setImage(tp.getSpark());
+        super.setImage(tp.get(Texture.spark));
         birth = System.nanoTime();
     }
     

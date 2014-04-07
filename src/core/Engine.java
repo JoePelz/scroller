@@ -70,7 +70,7 @@ public class Engine extends JPanel implements Runnable {
     /** The hero of this adventure. */
     private Hero hero;
     /** The set of textures to use. */
-    private TexturePack tp = new TexturePack();
+    private TexturePack tp = new TexturePack("/images/");
     /** The special effects used. */
     private ArrayList<Drawable> effects = new ArrayList<Drawable>();
     
@@ -88,12 +88,12 @@ public class Engine extends JPanel implements Runnable {
         setFocusable(true);
         
         //init world
-        world = new World(WIDTH, HEIGHT);
-        world.setTextures(tp);
+        world = new World(WIDTH, HEIGHT, tp);
 
         //init hero
         hero = new Hero();
-        hero.setImage(tp.getHero());
+        hero.setImage(tp.get(Texture.hero));
+        //hero.setImage(Texture.hero.get());
         final int startLocation = 300;
         hero.setPos(0, startLocation);
 
@@ -186,15 +186,15 @@ public class Engine extends JPanel implements Runnable {
         
         // get velocity in preparation for step 4
         Vector2D vel = obj.getVel();
-        hero.setImage(tp.getHero());
+        hero.setImage(tp.get(Texture.hero));
 
         // 4. a)  move x
         obj.move((int) (vel.x * seconds), 0);
         
         // 5. a) resolve collisions in x
-        Point bad = getWorldCollision(obj, Block.wall);
+        Point bad = getWorldCollision(obj, Texture.brick);
         if (bad != null) {
-            hero.setImage(tp.getHeroWhite());
+            hero.setImage(tp.get(Texture.heroNoise));
 //            System.out.println("Fixed a X collision at " 
 //                    + bad.x + "," + bad.y + ".");
             int resolution = world.escapeX(obj, vel.x * seconds, bad);
@@ -208,9 +208,9 @@ public class Engine extends JPanel implements Runnable {
 
         
         // 5. b) resolve collisions in y
-        bad = getWorldCollision(obj, Block.wall);
+        bad = getWorldCollision(obj, Texture.brick);
         if (bad != null) {
-            hero.setImage(tp.getHeroWhite());
+            hero.setImage(tp.get(Texture.heroNoise));
 //            System.out.println("Fixed a Y collision at " 
 //                    + bad.x + "," + bad.y + ".");
             int resolution = world.escapeY(obj, vel.y * seconds, bad);
@@ -228,7 +228,7 @@ public class Engine extends JPanel implements Runnable {
      * @param target The block type to test for
      * @return the first collision found, if any. Null if none.
      */
-    private Point getWorldCollision(Dynamic obj, Block target) {
+    private Point getWorldCollision(Dynamic obj, Texture target) {
         Point lowerLeft = new Point(obj.getPos());
         Dimension d = obj.getSize();
         Point upperRight = new Point(lowerLeft.x + d.width - 1, 
@@ -403,12 +403,12 @@ public class Engine extends JPanel implements Runnable {
      * Tests if the hero triggers world events, like by touching a light.
      */
     private void testWorldEvents() {
-        Point light = getWorldCollision(hero, Block.bgLight);
+        Point light = getWorldCollision(hero, Texture.bgLight);
         if ((light != null)) {
             Drawable burst = new Burst(tp);
             burst.setPos(light.x * World.CELL_SIZE + World.CELL_SIZE / 2, 
                          light.y * World.CELL_SIZE + World.CELL_SIZE / 2);
-            world.setCell(light.x, light.y, Block.bgLightDead);
+            world.setCell(light.x, light.y, Texture.bgLightDead);
             effects.add(burst);
         }
     }

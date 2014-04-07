@@ -8,102 +8,68 @@ import javax.swing.ImageIcon;
  * @author Joe Pelz, Set A, A00893517
  * @version 1.0
  */
-public class TexturePack {
-    /** The path images are stored in. */
-    public static final String IMAGE_PATH = "/images/";
+enum Texture {
     /** The image to use for background tiles. */
-    private ImageIcon bg;
+    bg("bg.png"),
     /** A light in the background. */
-    private ImageIcon bgLight;
+    bgLight("bgLight.png"),
     /** A broken light in the background. */
-    private ImageIcon bgLightDead;
+    bgLightDead("bgLightDead.png"),
     /** The image to use for the collision blocks. */
-    private ImageIcon wall;
+    brick("brick.png"),
     /** The image to use for our hero. */
-    private ImageIcon hero;
+    hero("heroShort.png"),
     /** Alternative image to use for the hero. */
-    private ImageIcon heroWhite;
-    
+    heroNoise("heroNoiseShort.png"),
     /** Spark texture. */
-    private ImageIcon spark;
+    spark("spark.png");
+    
+    /** The path to the file for that texture. */
+    private final String path;
     
     /**
-     * Construct a new texture pack using hardcoded default images.
+     * Initializer to save the image path.
+     * @param path The path to the image from the /src/ directory
      */
-    public TexturePack() {
-        bg = new ImageIcon(
-                getClass().getResource("/images/bg.png"));
-        bgLight = new ImageIcon(
-                getClass().getResource("/images/bgLight.png"));
-        bgLightDead = new ImageIcon(
-                getClass().getResource("/images/bgLightDead.png"));
-        wall = new ImageIcon(
-                getClass().getResource("/images/brick.png"));
-        //      hero = new ImageIcon(
-        //      getClass().getResource("/images/hero.png"));
-        //      heroWhite = new ImageIcon(
-        //      getClass().getResource("/images/heroNoise.png"));
-        hero = new ImageIcon(
-                getClass().getResource("/images/heroShort.png"));
-        heroWhite = new ImageIcon(
-                getClass().getResource("/images/heroNoiseShort.png"));
-        
-        spark = new ImageIcon(
-                getClass().getResource("/images/spark.png"));
+    private Texture(String path) {
+        this.path = path;
     }
+    
+    /**
+     * Get the file name for the current brick.
+     * @return The filename for the texture.
+     */
+    public String getName() {
+        return path;
+    }
+}
 
+/**
+ * <p>This holds the base path to look in for images. 
+ * It starts in the src directory.</p>
+ * @author Joe Pelz, Set A, A00893517
+ * @version 1.0
+ */
+public class TexturePack {
+    /** This is the actual folder to look in for images. */
+    private final String basePath;
+    
     /**
-     * Get the texture to use for background tiles. 
-     * @return The bg tile texture.
+     * Constructor, that requires the user to supply a path to the images.
+     * @param path The relative (to class) path the images 
+     * are stored in (e.g. "/images/")
      */
-    public ImageIcon getBG() {
-        return bg;
+    public TexturePack(String path) {
+        basePath = path;
     }
-
+    
     /**
-     * Get the texture to use for background variation. 
-     * @return The bg light tile texture.
+     * Convert a Texture enum into a ImageIcon.
+     * @param t The Texture to source
+     * @return The ImageIcon to draw.
      */
-    public ImageIcon getBGLight() {
-        return bgLight;
-    }
-    /**
-     * Get the texture to use for background variation. 
-     * @return The bg light tile texture.
-     */
-    public ImageIcon getBGLightDead() {
-        return bgLightDead;
-    }
-
-    /**
-     * Get the texture to use for solid brick. 
-     * @return The solid brick texture.
-     */
-    public ImageIcon getWall() {
-        return wall;
-    }
-
-    /**
-     * Get the texture to use for the hero. 
-     * @return The hero texture.
-     */    
-    public ImageIcon getHero() {
-        return hero;
-    }
-
-    /**
-     * Get an alternate hero texture. 
-     * @return The alt hero texture.
-     */
-    public ImageIcon getHeroWhite() {
-        return heroWhite;
-    }
-
-    /**
-     * Get the Spark image. 
-     * @return The spark texture.
-     */
-    public ImageIcon getSpark() {
-        return spark;
+    public ImageIcon get(Texture t) {
+        String path = basePath + t.getName();
+        return new ImageIcon(getClass().getResource(path));
     }
 }
