@@ -105,7 +105,7 @@ public class Engine extends JPanel implements Runnable {
     }
 
     /**
-    * Draws the image in the current location.
+    * Draws everything onto the main panel.
     * @param page Graphics component to draw on
     */
     public void paintComponent(Graphics page) {
@@ -194,10 +194,9 @@ public class Engine extends JPanel implements Runnable {
         // 5. a) resolve collisions in x
         Point bad = getWorldCollision(obj, Texture.brick);
         if (bad != null) {
-//            System.out.println("Fixed a X collision at " 
-//                    + bad.x + "," + bad.y + ".");
+            System.out.println("Fixed a X collision at " + bad.x + "," + bad.y + ".");
             int resolution = world.escapeX(obj, vel.x * seconds, bad);
-            
+
             obj.move(resolution, 0);
             obj.getVel().setX(0);
         }
@@ -209,11 +208,11 @@ public class Engine extends JPanel implements Runnable {
         // 5. b) resolve collisions in y
         bad = getWorldCollision(obj, Texture.brick);
         if (bad != null) {
-            hero.setImage(tp.get(Texture.heroNoise));
-//            System.out.println("Fixed a Y collision at " 
-//                    + bad.x + "," + bad.y + ".");
+//            System.out.println("Fixed a Y collision at " + bad.x + "," + bad.y + ".");
             int resolution = world.escapeY(obj, vel.y * seconds, bad);
-            
+            if (vel.y < 0) {
+                hero.setImage(tp.get(Texture.heroNoise));
+            }
             obj.move(0, resolution);
             obj.getVel().setY(0);
         }
@@ -233,12 +232,11 @@ public class Engine extends JPanel implements Runnable {
         Point upperRight = new Point(lowerLeft.x + d.width - 1, 
                 lowerLeft.y + d.height - 1);
         int cell = World.CELL_SIZE;
-        
+
         lowerLeft.x /= cell;
         lowerLeft.y /= cell;
         upperRight.x /= cell;
         upperRight.y /= cell;
-        
         for (int x = (lowerLeft.x); x <= (upperRight.x); x++) {
             for (int y = (lowerLeft.y); y <= (upperRight.y); y++) {
                 if (world.getCell(x, y) == target) {
@@ -257,6 +255,10 @@ public class Engine extends JPanel implements Runnable {
         private boolean right;
         /** Whether the <left> button is currently down. */
         private boolean left;
+        /** Whether the <upt> button is currently down. */
+        private boolean up;
+        /** Whether the <down> button is currently down. */
+        private boolean down;
         /**
         * Responds to the user pressing arrow keys by adjusting the
         * image and image location accordingly.
@@ -276,12 +278,12 @@ public class Engine extends JPanel implements Runnable {
             case KeyEvent.VK_RIGHT:
                 offX += SCROLL_SPEED;
                 break;
-            /*case KeyEvent.VK_W:
-                hero.move(0, 5);
+            case KeyEvent.VK_W:
+                up = true;
                 break;
             case KeyEvent.VK_S:
-                hero.move(0, -5);
-                break;*/
+                down = true;
+                break;
             case KeyEvent.VK_A:
                 left = true;
                 break;
@@ -308,6 +310,12 @@ public class Engine extends JPanel implements Runnable {
          */
         public void keyReleased(KeyEvent event) {
             switch (event.getKeyCode()) {
+            case KeyEvent.VK_W:
+                up = false;
+                break;
+            case KeyEvent.VK_S:
+                down = false;
+                break;
             case KeyEvent.VK_A:
                 left = false;
                 break;
@@ -317,7 +325,6 @@ public class Engine extends JPanel implements Runnable {
             default:
                 // ignore other characters
             }
-            
             //add actual forces
             updateForces();
         }
@@ -328,7 +335,12 @@ public class Engine extends JPanel implements Runnable {
          */
         private void updateForces() {
             keyForce.set(0.0, 0.0);
-            
+
+            if (up && !down) {
+                keyForce.offset(0, SPEED);
+            } else if (down && !up) {
+                keyForce.offset(0, -SPEED);
+            }
             if (left && !right) {
                 keyForce.offset(-SPEED, 0);
             } else if (right && !left) {
@@ -369,7 +381,7 @@ public class Engine extends JPanel implements Runnable {
             }
             
             //Test world events (like touching a light)
-            testWorldEvents();
+            //testWorldEvents();
             
             //Delete (release) dead effects.
             deleteDeadEntities();

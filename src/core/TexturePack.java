@@ -52,15 +52,22 @@ enum Texture {
  */
 public class TexturePack {
     /** This is the actual folder to look in for images. */
-    private final String basePath;
+//    private final String basePath;
+    /** Stores the actual images. */
+    private ImageIcon[] images = new ImageIcon[Texture.values().length];
     
     /**
      * Constructor, that requires the user to supply a path to the images.
-     * @param path The relative (to class) path the images 
+     * @param basePath The relative (to class) path the images 
      * are stored in (e.g. "/images/")
      */
-    public TexturePack(String path) {
-        basePath = path;
+    public TexturePack(String basePath) {
+        String path;
+        for (int i = 0; i < Texture.values().length; i++) {
+            path = basePath + Texture.values()[i].getName();
+//            System.out.println("path: " + path);
+            images[i] = new ImageIcon(getClass().getResource(path));
+        }
     }
     
     /**
@@ -69,7 +76,7 @@ public class TexturePack {
      * @return The ImageIcon to draw.
      */
     public ImageIcon get(Texture t) {
-        String path = basePath + t.getName();
-        return new ImageIcon(getClass().getResource(path));
+//        String path = basePath + t.getName();
+        return images[t.ordinal()];
     }
 }

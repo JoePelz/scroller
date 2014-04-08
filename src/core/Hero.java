@@ -1,6 +1,8 @@
 /** Joe Pelz, Set A, A00893517 */
 package core;
 
+import java.awt.Dimension;
+
 
 
 /**
@@ -59,5 +61,16 @@ public class Hero extends Drawable implements Dynamic {
         double factorX = 1 - DRAG_FACTOR * seconds;
         double factorY = 1 - (DRAG_FACTOR * DRAG_FACTOR_Y) * seconds;
         vel = new Vector2D(vel.x * factorX, vel.y * factorY);
+    }
+    
+    @Override
+    /**
+     * Get the width and height of the entity.
+     * @return A new dimension object holding the width and height.
+     */
+    public Dimension getSize() {
+        Dimension result = super.getSize();
+        result.height *= 0.5;
+        return result;
     }
 }
