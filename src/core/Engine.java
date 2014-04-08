@@ -65,7 +65,7 @@ public class Engine extends JPanel implements Runnable {
     private int offX;
     /** The camera's y position. */
     private int offY;
-    /** The forces applied by keypresses. */
+    /** The forces applied by key presses. */
     private Vector2D keyForce = new Vector2D(0.0, 0.0);
     /** The hero of this adventure. */
     private Hero hero;
@@ -194,7 +194,6 @@ public class Engine extends JPanel implements Runnable {
         // 5. a) resolve collisions in x
         Point bad = getWorldCollision(obj, Texture.brick);
         if (bad != null) {
-            hero.setImage(tp.get(Texture.heroNoise));
 //            System.out.println("Fixed a X collision at " 
 //                    + bad.x + "," + bad.y + ".");
             int resolution = world.escapeX(obj, vel.x * seconds, bad);

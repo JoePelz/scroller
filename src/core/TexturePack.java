@@ -18,9 +18,9 @@ enum Texture {
     /** The image to use for the collision blocks. */
     brick("brick.png"),
     /** The image to use for our hero. */
-    hero("heroShort.png"),
+    hero("fuzzy.png"),
     /** Alternative image to use for the hero. */
-    heroNoise("heroNoiseShort.png"),
+    heroNoise("fuzzyFlat.png"),
     /** Spark texture. */
     spark("spark.png");
     

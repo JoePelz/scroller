@@ -8,21 +8,6 @@ import java.util.Random;
 
 import javax.swing.ImageIcon;
 
-/**
- * <p>block types available for usage.</p>
- * @author Joe Pelz, Set A, A00893517
- * @version 1.0
- */
-//enum Block {
-    /** Background blocks, non colliding. */
-//    bg,
-    /** Background light, non colliding. */
-//    bgLight,
-    /** Background broken light, non colliding. */
-//    bgLightDead,
-    /** Solid bricks, in the foreground. */
-//    wall
-//}
 
 /**
  * <p>This class represents a game world, randomely generated, 
@@ -49,19 +34,10 @@ public class World {
     /** The world itself, in memory. */
     private Texture[][] world = new Texture[WORLD_HEIGHT][WORLD_WIDTH];
 
-    /** The icon to use for background tiles. */
-//    private ImageIcon gBG;
-    /** The icon to use for background lights. */
-//    private ImageIcon gBGLight;
-    /** The icon to use for broken background lights. */
-//    private ImageIcon gBGLightDead;
-    /** The icon to use for solid bricks. */
-//    private ImageIcon gWall;
-    /** The icon to use for extra-worldly tiles. */
-//    private ImageIcon gEmpty;
+
     /** The current icon to paint with. */
     private ImageIcon brush;
-    /** The texture pack to use. */
+    /** The texture pack to use. NOT toilet paper. */
     private TexturePack tp;
     
     /**
