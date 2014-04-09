@@ -4,6 +4,7 @@ package core;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.Point;
 
 import javax.swing.ImageIcon;
@@ -18,7 +19,7 @@ public class Drawable {
     /** The position of the entity. */
     private Point pos;
     /** The image that represents this entity. */
-    private ImageIcon brush;
+    private Image brush;
     
     /**
      * Constructor: initialized the entity at the origin, 
@@ -32,7 +33,7 @@ public class Drawable {
      * Sets the image to draw for this entity.
      * @param image The image to draw for this entity
      */
-    public void setImage(ImageIcon image) {
+    public void setImage(Image image) {
         brush = image;
     }
     /**
@@ -40,7 +41,7 @@ public class Drawable {
      * @return A new dimension object holding the width and height.
      */
     public Dimension getSize() {
-        return new Dimension(brush.getIconWidth(), brush.getIconHeight());
+        return new Dimension(brush.getWidth(null), brush.getHeight(null));
     }
     /**
      * Set an absolute position for the entity.
@@ -88,7 +89,7 @@ public class Drawable {
         
         //set x, y to the bottom left corner
         int x = 0;
-        int y = comp.getHeight() - brush.getIconHeight();
+        int y = comp.getHeight() - brush.getHeight(null);
         
         //move right and up by the x and y values.
         x += pos.x;
@@ -98,6 +99,7 @@ public class Drawable {
         x -= offsetX;
         y += offsetY;
         
-        brush.paintIcon(comp, page, x, y);
+//        brush.paintIcon(comp, page, x, y);
+        page.drawImage(brush, x, y, null);
     }
 }

@@ -3,10 +3,10 @@ package core;
 
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Image;
 import java.awt.Point;
+import java.awt.image.BufferedImage;
 import java.util.Random;
-
-import javax.swing.ImageIcon;
 
 
 /**
@@ -36,9 +36,11 @@ public class World {
 
 
     /** The current icon to paint with. */
-    private ImageIcon brush;
+    private Image brush;
     /** The texture pack to use. NOT toilet paper. */
     private TexturePack tp;
+    /** The pre-computed image to draw for the bg. */
+    private BufferedImage precomp;
     
     /**
      * World constructor, to make a new world of the given dimensions.
@@ -65,6 +67,10 @@ public class World {
             }
         }
         brush = tp.get(Texture.bg);
+        
+        precomp = new BufferedImage(CELL_SIZE * WORLD_WIDTH, 
+                CELL_SIZE * WORLD_HEIGHT, 
+                BufferedImage.TYPE_INT_RGB);
     }
     
     /**
@@ -120,7 +126,11 @@ public class World {
             //nudge it right into safety
             escape = CELL_SIZE - (pos.x % CELL_SIZE);
         }
-        
+
+        //Clamp the velocity;
+        if (Math.abs(escape) > Math.abs(velocity)) {
+            escape = 0;
+        }
         return escape;
     }
     /**
@@ -144,7 +154,10 @@ public class World {
             //nudge it up into safety
             escape = CELL_SIZE - (pos.y % CELL_SIZE);
         }
-        
+        //Clamp the velocity;
+        if (Math.abs(escape) > Math.abs(velocity)) {
+            escape = 0;
+        }
         return escape;
     }
 
@@ -161,6 +174,9 @@ public class World {
         int x = 0;
         int y = 0;
 //        boolean isFun = false;
+//        Graphics g = precomp.createGraphics();
+//        Image img = brush.getImage();
+//        g.drawImage(img, x, y, comp);
         
         int resolutionOffset = comp.getHeight() - CELL_SIZE;
 
@@ -211,7 +227,8 @@ public class World {
 //                    x += GEN.nextInt(3) - 1;
 //                    y += GEN.nextInt(3) - 1;
 //                }
-                brush.paintIcon(comp, page, x, y);
+//                brush.paintIcon(comp, page, x, y);
+                page.drawImage(brush, x, y, null);
             }
         }
     }

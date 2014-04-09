@@ -1,6 +1,10 @@
 /** Joe Pelz, Set A, A00893517 */
 package core;
 
+import java.awt.Image;
+import java.awt.Toolkit;
+import java.net.URL;
+
 import javax.swing.ImageIcon;
 
 /**
@@ -51,10 +55,10 @@ enum Texture {
  * @version 1.0
  */
 public class TexturePack {
-    /** This is the actual folder to look in for images. */
-//    private final String basePath;
     /** Stores the actual images. */
     private ImageIcon[] images = new ImageIcon[Texture.values().length];
+    /** Stores the actual images. */
+    private Image[] imgs = new Image[Texture.values().length];
     
     /**
      * Constructor, that requires the user to supply a path to the images.
@@ -63,10 +67,12 @@ public class TexturePack {
      */
     public TexturePack(String basePath) {
         String path;
+        URL res;
         for (int i = 0; i < Texture.values().length; i++) {
             path = basePath + Texture.values()[i].getName();
-//            System.out.println("path: " + path);
             images[i] = new ImageIcon(getClass().getResource(path));
+            res = getClass().getResource(path);
+            imgs[i] = Toolkit.getDefaultToolkit().getImage(res);
         }
     }
     
@@ -75,8 +81,7 @@ public class TexturePack {
      * @param t The Texture to source
      * @return The ImageIcon to draw.
      */
-    public ImageIcon get(Texture t) {
-//        String path = basePath + t.getName();
-        return images[t.ordinal()];
+    public Image get(Texture t) {
+        return imgs[t.ordinal()];
     }
 }

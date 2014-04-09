@@ -19,7 +19,9 @@ public class Hero extends Drawable implements Dynamic {
     private Vector2D vel;
     /** The forces currently acting on the hero. */
     private Vector2D force;
-    
+    /** True if hero is on the ground. */
+    private boolean onGround;
+
     /**
      * Hero constructor, default with 0 velocity and force.
      */
@@ -70,7 +72,24 @@ public class Hero extends Drawable implements Dynamic {
      */
     public Dimension getSize() {
         Dimension result = super.getSize();
-        result.height *= 0.5;
+//        result.height *= 0.5;
         return result;
     }
+    
+    /**
+     * True if the hero is on the ground.
+     * @return the onGround
+     */
+    public boolean isOnGround() {
+        return onGround;
+    }
+
+    /**
+     * Whether or not the hero is on the ground. 
+     * @param onGround the onGround to set
+     */
+    public void setOnGround(boolean onGround) {
+        this.onGround = onGround;
+    }
+
 }

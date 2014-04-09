@@ -194,7 +194,7 @@ public class Engine extends JPanel implements Runnable {
         // 5. a) resolve collisions in x
         Point bad = getWorldCollision(obj, Texture.brick);
         if (bad != null) {
-            System.out.println("Fixed a X collision at " + bad.x + "," + bad.y + ".");
+//            System.out.println("Fixed a X collision at " + bad.x + "," + bad.y + ".");
             int resolution = world.escapeX(obj, vel.x * seconds, bad);
 
             obj.move(resolution, 0);
@@ -211,10 +211,13 @@ public class Engine extends JPanel implements Runnable {
 //            System.out.println("Fixed a Y collision at " + bad.x + "," + bad.y + ".");
             int resolution = world.escapeY(obj, vel.y * seconds, bad);
             if (vel.y < 0) {
+                hero.setOnGround(true);
                 hero.setImage(tp.get(Texture.heroNoise));
             }
             obj.move(0, resolution);
             obj.getVel().setY(0);
+        } else {
+            hero.setOnGround(false);
         }
     }
     
@@ -255,7 +258,7 @@ public class Engine extends JPanel implements Runnable {
         private boolean right;
         /** Whether the <left> button is currently down. */
         private boolean left;
-        /** Whether the <upt> button is currently down. */
+        /** Whether the <up> button is currently down. */
         private boolean up;
         /** Whether the <down> button is currently down. */
         private boolean down;
@@ -291,8 +294,7 @@ public class Engine extends JPanel implements Runnable {
                 right = true;
                 break;
             case KeyEvent.VK_SPACE:
-                boolean isOnGround = (hero.getVel().y == 0);
-                if (isOnGround) {
+                if (hero.isOnGround()) {
                     hero.setVel(new Vector2D(hero.getVel().x, JUMP)); 
                 }
                 break;
@@ -381,7 +383,7 @@ public class Engine extends JPanel implements Runnable {
             }
             
             //Test world events (like touching a light)
-            //testWorldEvents();
+            testWorldEvents();
             
             //Delete (release) dead effects.
             deleteDeadEntities();
