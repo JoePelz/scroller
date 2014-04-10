@@ -24,7 +24,7 @@ enum Texture {
     /** The image to use for our hero. */
     hero("fuzzy.png"),
     /** Alternative image to use for the hero. */
-    heroNoise("fuzzyFlat.png"),
+    heroGround("fuzzyFlat.png"),
     /** Spark texture. */
     spark("spark.png");
     

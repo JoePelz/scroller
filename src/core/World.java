@@ -136,14 +136,12 @@ public class World {
     public int escapeX(Dynamic obj, double velocity, Point impactZone) {
         Point pos = obj.getPos();
         int escape = 0; 
-        //if the obj was moving right
+        //if the obj was moving right nudge it left into safety.
         if (velocity > 0) {
-            //nudge it left into safety.
-            escape = -(pos.x % CELL_SIZE) + (obj.getSize().width % CELL_SIZE);
+            escape = (impactZone.x * CELL_SIZE - obj.getSize().width) - pos.x;
             
-        //but if the obj was moving left
+        //but if the obj was moving left nudge it right into safety.
         } else if (velocity < 0) {
-            //nudge it right into safety
             escape = CELL_SIZE - (pos.x % CELL_SIZE);
         }
 
@@ -164,16 +162,16 @@ public class World {
     public int escapeY(Dynamic obj, double velocity, Point impactZone) {
         Point pos = obj.getPos();
         int escape = 0; 
-        //if the obj was moving up
+
+        //if the obj was moving up nudge it down into safety.
         if (velocity > 0) {
-            //nudge it down into safety.
-            escape = -(pos.y % CELL_SIZE) + (obj.getSize().height % CELL_SIZE);
+            escape = (impactZone.y * CELL_SIZE - obj.getSize().height) - pos.y;
             
-        //but if the obj was moving down
+        //but if the obj was moving down nudge it up into safety.
         } else if (velocity < 0) {
-            //nudge it up into safety
             escape = CELL_SIZE - (pos.y % CELL_SIZE);
         }
+        
         //Clamp the velocity;
         if (Math.abs(escape) > Math.abs(velocity)) {
             escape = 0;

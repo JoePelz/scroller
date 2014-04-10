@@ -74,9 +74,6 @@ public class Engine extends JPanel implements Runnable {
     /** The special effects used. */
     private ArrayList<Drawable> effects = new ArrayList<Drawable>();
     
-    //private Graphics g;
-    //private BufferedImage image;
-
     /**
     * Constructor: Sets up this panel and loads the images.
     */
@@ -192,10 +189,8 @@ public class Engine extends JPanel implements Runnable {
         obj.move((int) (vel.x * seconds), 0);
         
         // 5. a) resolve collisions in x
-//        Point bad = null;
         Point bad = getWorldCollision(obj, Texture.brick);
         if (bad != null) {
-//            System.out.println("Fixed a X collision at " + bad.x + "," + bad.y + ".");
             int resolution = world.escapeX(obj, vel.x * seconds, bad);
 
             obj.move(resolution, 0);
@@ -209,11 +204,10 @@ public class Engine extends JPanel implements Runnable {
         // 5. b) resolve collisions in y
         bad = getWorldCollision(obj, Texture.brick);
         if (bad != null) {
-//            System.out.println("Fixed a Y collision at " + bad.x + "," + bad.y + ".");
             int resolution = world.escapeY(obj, vel.y * seconds, bad);
             if (vel.y < 0) {
                 hero.setOnGround(true);
-                hero.setImage(tp.get(Texture.heroNoise));
+                hero.setImage(tp.get(Texture.heroGround));
             }
             obj.move(0, resolution);
             obj.getVel().setY(0);

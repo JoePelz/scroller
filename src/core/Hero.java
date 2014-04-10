@@ -1,7 +1,9 @@
 /** Joe Pelz, Set A, A00893517 */
 package core;
 
+import java.awt.Component;
 import java.awt.Dimension;
+import java.awt.Graphics;
 
 
 
@@ -15,6 +17,8 @@ public class Hero extends Drawable implements Dynamic {
     private static final double DRAG_FACTOR = 5;
     /** How strong vertical drag is relative to horizontal. */
     private static final double DRAG_FACTOR_Y = 0.2;
+    /** How much smaller the collision box is than the graphic. */
+    private static final double CBOX_SCALE = 0.65;
     /** The hero's current velocity. */
     private Vector2D vel;
     /** The forces currently acting on the hero. */
@@ -30,11 +34,6 @@ public class Hero extends Drawable implements Dynamic {
         vel = new Vector2D(0, 0);
         force = new Vector2D(0, 0);
     }
-    
-    /*@Override
-    public void draw(Component comp, Graphics page, int offsetX, int offsetY) {
-        super.draw(comp, page, offsetX, offsetY);
-    }*/
     
     @Override
     public void applyForces(double seconds) {
@@ -71,9 +70,28 @@ public class Hero extends Drawable implements Dynamic {
      * @return A new dimension object holding the width and height.
      */
     public Dimension getSize() {
-        Dimension result = super.getSize();
-//        result.height *= 0.5;
+        Dimension dim = super.getSize();
+        Dimension result = new Dimension((int) (dim.height * CBOX_SCALE),
+                                         (int) (dim.width  * CBOX_SCALE));
         return result;
+    }
+    
+    @Override
+    public void draw(Component comp, Graphics page, int offsetX, int offsetY) {
+        // Get the actual size, not the shrunken (overridden) size.
+        Dimension dim = super.getSize();
+        
+        //If the collision is scaled down, we want 
+        //  the image drawn centered on the collision box.
+        //This offsets the drawing of the image  
+        //  to be centered on the collision box.
+        double tweakX = dim.width  * (1.0 - CBOX_SCALE) / 2.0;
+        double tweakY = dim.height * (1.0 - CBOX_SCALE) / 2.0;
+        
+        super.draw(comp, 
+                page, 
+                offsetX + (int) tweakX, 
+                offsetY + (int) tweakY);
     }
     
     /**
