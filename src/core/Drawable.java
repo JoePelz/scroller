@@ -7,8 +7,6 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
 
-import javax.swing.ImageIcon;
-
 /**
  * <p>Base class for drawable entities.  Stores position and image 
  * information and draws to the screen.</p>

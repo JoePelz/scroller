@@ -26,6 +26,8 @@ public class World {
     private static final int WORLD_WIDTH = 150;
     /** Height of the world. */
     private static final int WORLD_HEIGHT = 15;
+    /** Size of background image buffer. */
+    private static final int BG_BUFFER_SIZE = 4;
     /** Brick density. */
     private static final float BRICK_DENSITY = 0.8f;
     /** Probability of a light in the bg. */
@@ -41,6 +43,12 @@ public class World {
     private TexturePack tp;
     /** The pre-computed image to draw for the bg. */
     private BufferedImage precomp;
+    /** The pre-computed image to draw for the bg. */
+    private BufferedImage background;
+    /** Graphics handle for the buffered image. */
+    private Graphics g;
+    /** Graphics handle for the background. */
+    private Graphics gBG;
     
     /**
      * World constructor, to make a new world of the given dimensions.
@@ -70,7 +78,14 @@ public class World {
         
         precomp = new BufferedImage(CELL_SIZE * WORLD_WIDTH, 
                 CELL_SIZE * WORLD_HEIGHT, 
-                BufferedImage.TYPE_INT_RGB);
+                BufferedImage.TYPE_INT_ARGB);
+        background = new BufferedImage(CELL_SIZE * BG_BUFFER_SIZE, 
+                                       CELL_SIZE * BG_BUFFER_SIZE,
+                                       BufferedImage.TYPE_INT_RGB);
+        g = precomp.createGraphics();
+        gBG = background.createGraphics();
+        fillBuffer();
+        fillBGBuffer();
     }
     
     /**
@@ -102,6 +117,11 @@ public class World {
                 && y >= 0
                 && y < WORLD_HEIGHT) {
             world[y][x] = type;
+            brush = tp.get(type);
+            g.drawImage(brush, 
+                        x * CELL_SIZE, 
+                        (WORLD_HEIGHT - 1 - y) * CELL_SIZE, 
+                        null);
         }
     }
 
@@ -161,6 +181,39 @@ public class World {
         return escape;
     }
 
+    /** 
+     * Draw into the tiling background buffer.
+     */
+    public void fillBGBuffer() {
+        //set the brush to background bricks
+        brush = tp.get(Texture.bg);
+        
+        for (int y = 0; y < BG_BUFFER_SIZE; y++) {
+            for (int x = 0; x < BG_BUFFER_SIZE; x++) {
+                gBG.drawImage(brush, 
+                        x * CELL_SIZE, 
+        // Y is upside down, but in this case doesn't matter
+                        y * CELL_SIZE,  
+                        null);            
+            }
+        }
+    }
+    
+    /**
+     * Draw all the tiles to the buffered precomp.
+     */
+    public void fillBuffer() {
+        for (int y = 0; y < WORLD_HEIGHT; y++) {
+            for (int x = 0; x < WORLD_WIDTH; x++) {
+                g.drawImage(tp.get(world[y][x]), 
+                            x * CELL_SIZE, 
+                            (WORLD_HEIGHT - 1 - y) * CELL_SIZE, 
+                            null);            
+            }
+        }
+
+    }
+    
     /**
      * Draw the world to the screen, filling in absent array entries with 
      * bg bricks, offset by the camera's position.  THe coordinates 
@@ -173,63 +226,25 @@ public class World {
     public void draw(Graphics page, Component comp, int offsetX, int offsetY) {
         int x = 0;
         int y = 0;
-//        boolean isFun = false;
-//        Graphics g = precomp.createGraphics();
-//        Image img = brush.getImage();
-//        g.drawImage(img, x, y, comp);
         
-        int resolutionOffset = comp.getHeight() - CELL_SIZE;
+        //Move with the camera
+        x = -offsetX;
+        y = offsetY;
+        
+        //Allow for window resizing
+        y = y + comp.getHeight() - WORLD_HEIGHT * CELL_SIZE;
 
-        if (offsetX < 0) {
-            offsetX -= CELL_SIZE;
-        }
-        if (offsetY < 0) {
-            offsetY -= CELL_SIZE;
-        }
-        //first visible block
-        int minX = offsetX / CELL_SIZE;
-        //last visible block
-        int maxX = minX + comp.getWidth() / CELL_SIZE + 1;
-        
-        //lowest visible block
-        int minY = offsetY / CELL_SIZE;
-        //highest visible block
-        int maxY = minY + comp.getHeight() / CELL_SIZE + 1;
-        
-        int subX = offsetX % CELL_SIZE + ((offsetX < 0) ? CELL_SIZE : 0);
-        int subY = -offsetY % CELL_SIZE - ((offsetY < 0) ? CELL_SIZE : 0);
-        
-        //infinitely scrolling background
-        for (int row = minY; row <= maxY; row++) {
-            for (int col = minX; col <= maxX; col++) {
-                //if brick is in range, use the world array
-                if (row >= 0 
-                        && row < world.length 
-                        && col >= 0 
-                        && col < world[0].length) {
-                    brush = tp.get(world[row][col]);
-//                    if (world[row][col] == Texture.brick) {
-//                        isFun = true;
-//                    } else {
-//                        isFun = false;
-//                    }
-                //if brick is not in range, use the empty image
-                } else {
-                    brush = tp.get(Texture.bg);
-                }
-                
-                x = (col - minX) * CELL_SIZE - subX;
-                y = (row - minY) * CELL_SIZE + subY;
-                y = (y * -1) + (resolutionOffset);
-
-                //hehehehe.  Fun.
-//                if (isFun) {
-//                    x += GEN.nextInt(3) - 1;
-//                    y += GEN.nextInt(3) - 1;
-//                }
-//                brush.paintIcon(comp, page, x, y);
-                page.drawImage(brush, x, y, null);
+        //Draw the infinite background
+        int h;
+        int v = offsetY % CELL_SIZE - CELL_SIZE;
+        for (; v < comp.getHeight(); v += background.getHeight()) {
+            h = -(offsetX % CELL_SIZE) - CELL_SIZE;
+            for (; h < comp.getWidth(); h += background.getWidth()) {
+                page.drawImage(background, h, v, null);
             }
         }
+        
+        //Draw the important tiles into place.
+        page.drawImage(precomp, x, y, null);
     }
 }

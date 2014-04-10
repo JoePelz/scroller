@@ -122,7 +122,7 @@ public class Engine extends JPanel implements Runnable {
                 pop.draw(this, page, offX, offY);
             }
         }
-
+        
         //Draw hero position information
         /*Point pos = hero.getPos();
         Dimension size = hero.getSize();
@@ -192,6 +192,7 @@ public class Engine extends JPanel implements Runnable {
         obj.move((int) (vel.x * seconds), 0);
         
         // 5. a) resolve collisions in x
+//        Point bad = null;
         Point bad = getWorldCollision(obj, Texture.brick);
         if (bad != null) {
 //            System.out.println("Fixed a X collision at " + bad.x + "," + bad.y + ".");
