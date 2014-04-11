@@ -3,7 +3,6 @@ package core;
 
 import java.awt.Component;
 import java.awt.Graphics;
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
 import java.util.Random;
@@ -37,8 +36,6 @@ public class World {
     private Texture[][] world = new Texture[WORLD_HEIGHT][WORLD_WIDTH];
 
 
-    /** The current icon to paint with. */
-    private Image brush;
     /** The texture pack to use. NOT toilet paper. */
     private TexturePack tp;
     /** The pre-computed image to draw for the bg. */
@@ -58,7 +55,26 @@ public class World {
      */
     public World(int width, int height, TexturePack texPack) {
         tp = texPack;
+
+        genWorldRandom();
+//        genWorldFlat();
         
+        precomp = new BufferedImage(CELL_SIZE * WORLD_WIDTH, 
+                CELL_SIZE * WORLD_HEIGHT, 
+                BufferedImage.TYPE_INT_ARGB);
+        background = new BufferedImage(CELL_SIZE * BG_BUFFER_SIZE, 
+                                       CELL_SIZE * BG_BUFFER_SIZE,
+                                       BufferedImage.TYPE_INT_RGB);
+        g = precomp.createGraphics();
+        gBG = background.createGraphics();
+        fillBuffer();
+        fillBGBuffer();
+    }
+    
+    /**
+     * Populate the world with random simple blocks.
+     */
+    private void genWorldRandom() {
         for (int row = 0; row < world.length; row++) {
             for (int col = 0; col < world[0].length; col++) {
                 if (GEN.nextDouble() * row < BRICK_DENSITY) {
@@ -74,20 +90,27 @@ public class World {
                 }
             }
         }
-        brush = tp.get(Texture.bg);
+    }
+
+    /**
+     * Populate the world with a flat(ish) landscape.
+     */
+    private void genWorldFlat() {
+        int height = 1;
         
-        precomp = new BufferedImage(CELL_SIZE * WORLD_WIDTH, 
-                CELL_SIZE * WORLD_HEIGHT, 
-                BufferedImage.TYPE_INT_ARGB);
-        background = new BufferedImage(CELL_SIZE * BG_BUFFER_SIZE, 
-                                       CELL_SIZE * BG_BUFFER_SIZE,
-                                       BufferedImage.TYPE_INT_RGB);
-        g = precomp.createGraphics();
-        gBG = background.createGraphics();
-        fillBuffer();
-        fillBGBuffer();
+        for (int col = 0; col < world[0].length; col++) {
+            for (int row = 0; row < world.length; row++) {
+                if (row <= height) {
+                    world[row][col] = Texture.brick;
+                } else {
+                    world[row][col] = Texture.bg;
+                }
+            }
+        }
     }
     
+    
+
     /**
      * If the block at the given coordinates is inside of bounds, 
      * return what type of block it is.
@@ -117,8 +140,7 @@ public class World {
                 && y >= 0
                 && y < WORLD_HEIGHT) {
             world[y][x] = type;
-            brush = tp.get(type);
-            g.drawImage(brush, 
+            g.drawImage(tp.get(type), 
                         x * CELL_SIZE, 
                         (WORLD_HEIGHT - 1 - y) * CELL_SIZE, 
                         null);
@@ -184,11 +206,10 @@ public class World {
      */
     public void fillBGBuffer() {
         //set the brush to background bricks
-        brush = tp.get(Texture.bg);
         
         for (int y = 0; y < BG_BUFFER_SIZE; y++) {
             for (int x = 0; x < BG_BUFFER_SIZE; x++) {
-                gBG.drawImage(brush, 
+                gBG.drawImage(tp.get(Texture.bg), 
                         x * CELL_SIZE, 
         // Y is upside down, but in this case doesn't matter
                         y * CELL_SIZE,  
@@ -234,8 +255,9 @@ public class World {
 
         //Draw the infinite background
         int h;
-        int v = offsetY % CELL_SIZE - CELL_SIZE;
-        for (; v < comp.getHeight(); v += background.getHeight()) {
+        int v = offsetY % CELL_SIZE + comp.getHeight();
+//        System.out.println("v = " + v + "; v > " + 0);
+        for (; v > -background.getHeight(); v -= background.getHeight()) {
             h = -(offsetX % CELL_SIZE) - CELL_SIZE;
             for (; h < comp.getWidth(); h += background.getWidth()) {
                 page.drawImage(background, h, v, null);
