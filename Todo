@@ -1,0 +1,39 @@
+Things to do:
+
+add creatures.
+	Move on their own
+	Obey physics? Fly?
+
+add collectibles.
+	rings, coins, stars, etc...
+	powerups
+	teleporters
+
+make world generation more interesting
+	prebuilt sections?
+	random algorithms?
+
+add other block types:
+	color/texture changes
+	ramp type, stair type
+	door
+	trampoline
+	wormhole
+	mud
+	broken brick (breakable)
+	trapdoor
+	fan
+
+particle system
+	fire hose
+	flower pollen burst
+
+collision
+	handle negative y coordinates??
+	handle non-square collisions
+	handle ramps
+	handle stairs
+	handle active-active collisions?! (uh oh!)
+
+add scoring
+	
