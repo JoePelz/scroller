@@ -1,9 +1,12 @@
 /** Joe Pelz, Set A, A00893517 */
-package core;
+package core.creatures;
 
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
+
+import core.Texture;
+import core.TexturePack;
 
 /**
  * <p>Draws a burst of 8 sparks to the screen on creation. </p>

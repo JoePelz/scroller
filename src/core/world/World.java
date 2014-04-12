@@ -1,11 +1,14 @@
 /** Joe Pelz, Set A, A00893517 */
-package core;
+package core.world;
 
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Point;
 import java.awt.image.BufferedImage;
-import java.util.Random;
+
+import core.Dynamic;
+import core.Texture;
+import core.TexturePack;
 
 
 /**
@@ -19,21 +22,17 @@ import java.util.Random;
 public class World {
     /** The size of the blocks (pixels) in this world. */
     public static final int CELL_SIZE = 30;
-    /** Random gen of blocks. For fun. */
-    private static final Random GEN = new Random();
     /** Width of the world. */
     private static final int WORLD_WIDTH = 150;
     /** Height of the world. */
     private static final int WORLD_HEIGHT = 15;
     /** Size of background image buffer. */
     private static final int BG_BUFFER_SIZE = 4;
-    /** Brick density. */
-    private static final float BRICK_DENSITY = 0.8f;
-    /** Probability of a light in the bg. */
-    private static final float LIGHT_PBTY = 0.02f;
     
     /** The world itself, in memory. */
-    private Texture[][] world = new Texture[WORLD_HEIGHT][WORLD_WIDTH];
+    private Level world; 
+    /** THe player's start location. */
+    private Point start;
 
 
     /** The texture pack to use. NOT toilet paper. */
@@ -56,9 +55,13 @@ public class World {
     public World(int width, int height, TexturePack texPack) {
         tp = texPack;
 
-//        genWorldRandom();
-        genWorldHills();
-//        genWorldPlatform();
+//        world = RandomLevel.genWorldRandom(WORLD_WIDTH, WORLD_HEIGHT);
+//        world = RandomLevel.genWorldHills(WORLD_WIDTH, WORLD_HEIGHT);
+//        world = new Level("house.txt");
+        world = RandomLevel.genWorldPlatform(WORLD_WIDTH, WORLD_HEIGHT);
+        
+        start = world.getStart();
+        start = new Point(start.x * CELL_SIZE, start.y * CELL_SIZE);
         
         precomp = new BufferedImage(CELL_SIZE * WORLD_WIDTH, 
                 CELL_SIZE * WORLD_HEIGHT, 
@@ -71,177 +74,16 @@ public class World {
         fillBuffer();
         fillBGBuffer();
     }
-    
-    /**
-     * Populate the world with random simple blocks.
-     */
-    private void genWorldRandom() {
-        for (int row = 0; row < world.length; row++) {
-            for (int col = 0; col < world[0].length; col++) {
-                if (GEN.nextDouble() * row < BRICK_DENSITY) {
-                    //solid bricks
-                    world[row][col] = Texture.brick;
-                } else {
-                    //background bricks
-                    if (GEN.nextDouble() < LIGHT_PBTY) {
-                        world[row][col] = Texture.bgLight;
-                    } else {
-                        world[row][col] = Texture.bg;
-                    }
-                }
-            }
-        }
-    }
-
-    /**
-     * Populate the world with a flat(ish) landscape.
-     */
-    private void genWorldHills() {
-        final double pHole = 0.1;
-        final double pLight = 0.15;
-        final int pLightElRange = 3;
-        final int pLightElMin = 2;
-        final double pUp = 0.2;
-        final double pDown = 0.2;
         
-        boolean hole = false;
-        boolean lit = false;
-        int litEl = 0;
-        double direction = 0.0;
-        int height = 1;
-        double pBigHole = 0.5;
-        
-        for (int col = 0; col < world[0].length; col++) {
-            direction = GEN.nextDouble();
-            if (direction < pUp) {
-                height++;
-            } else if (direction < pUp + pDown) {
-                height--;
-            }
-            if (height < 1) {
-                height = 1;
-            }
-            if (!hole) {
-                hole = (GEN.nextDouble() < pHole);
-                pBigHole = 0.5;
-            } else {
-                hole = (GEN.nextDouble() < pBigHole);
-                pBigHole /= 2.0;
-            }
-            
-            lit = (GEN.nextDouble() < pLight);
-            
-            if (lit) {
-                litEl = GEN.nextInt(pLightElRange) + pLightElMin;
-                litEl = Math.min(height + litEl, WORLD_HEIGHT - 1);
-            }
-            
-            for (int row = 0; row < world.length; row++) {
-                if (row < height && !hole) {
-                    world[row][col] = Texture.brick;
-                } else {
-                    world[row][col] = Texture.bg;
-                }
-                if (lit) {
-                    world[litEl][col] = Texture.bgLight;
-                }
-            }
-        }
-        
-        //ensure the player starts on a brick.
-        world[0][0] = Texture.brick;
-    }
-    
-    /**
-     * fill the world with background bricks.
-     */
-    private void genWorldEmpty() {
-        for (int col = 0; col < world[0].length; col++) {
-            for (int row = 0; row < world.length; row++) {
-                world[row][col] = Texture.bg;
-            }
-        }
-    }
-    
-    /**
-     * Populate the world with a platform sequence landscape.
-     */
-    private void genWorldPlatform() {
-        //initialize an empty world
-        genWorldEmpty();
-
-        final double pHole = 0.3;
-        final double pLight = 0.1;
-        final int lightElRange = 3;
-        final int lightElMin = 3;
-        Point pos = new Point(0, 0);
-        int litEl = 0;
-        int xDist = 0;
-        
-        for (int col = 0; col < WORLD_WIDTH; col++) {
-            //place a brick, if the current column has a brick
-            if (col == pos.x) {
-                world[pos.y][pos.x] = Texture.brick;
-
-                if (GEN.nextDouble() > pHole) {
-                    pos.x += 1;
-                } else {
-                    xDist = GEN.nextInt(6) + 2; //(2 - 7)
-                    if (xDist == 7 && pos.y <= 1) {
-                        xDist = 6;
-                    }
-                    pos.x += xDist;
-                    switch (xDist) {
-                    case 2:
-                    case 3:
-                    case 4:
-                        pos.y += GEN.nextInt(7) - 3; //(-3 : 3)
-                        break;
-                    case 5:
-                        pos.y += GEN.nextInt(6) - 3; //(-3 : 2)
-                        break;
-                    case 6:
-                        pos.y += GEN.nextInt(4) - 2; //(-2 : 1)
-                        break;
-                    case 7:
-                        pos.y += GEN.nextInt(3) - 3; // (-3 : -1)
-                        break;
-                    default:
-                        break;
-                    }
-                }
-
-                if (pos.y > WORLD_HEIGHT - 1) {
-                    pos.y = WORLD_HEIGHT - 1;
-                } else if (pos.y < 0) {
-                    pos.y = 0;
-                }
-            }
-            
-            //place a light
-            if (GEN.nextDouble() < pLight) {
-                litEl = GEN.nextInt(lightElRange) + lightElMin;
-                litEl = Math.min(pos.y + litEl, WORLD_HEIGHT - 1);
-                world[litEl][col] = Texture.bgLight;
-            }
-        }
-    }
-
     /**
      * If the block at the given coordinates is inside of bounds, 
      * return what type of block it is.
-     * @param x The x coordinate to fetch.
-     * @param y The y coordinate to fetch.
+     * @param col The x coordinate to fetch.
+     * @param row The y coordinate to fetch.
      * @return The block type
      */
-    public Texture getCell(int x, int y) {
-        if (x >= 0 
-                && x < WORLD_WIDTH
-                && y >= 0
-                && y < WORLD_HEIGHT) {
-            return world[y][x];
-        }
-        return Texture.bg;
+    public Texture getCell(int col, int row) {
+        return world.getCell(col, row);
     }
     /**
      * If the block at the given coordinates is inside of bounds, 
@@ -251,16 +93,11 @@ public class World {
      * @param type The type to set the block to
      */
     public void setCell(int x, int y, Texture type) {
-        if (x >= 0 
-                && x < WORLD_WIDTH
-                && y >= 0
-                && y < WORLD_HEIGHT) {
-            world[y][x] = type;
-            g.drawImage(tp.get(type), 
-                        x * CELL_SIZE, 
-                        (WORLD_HEIGHT - 1 - y) * CELL_SIZE, 
-                        null);
-        }
+        world.setCell(x, y, type);
+        g.drawImage(tp.get(type), 
+                    x * CELL_SIZE, 
+                    (WORLD_HEIGHT - 1 - y) * CELL_SIZE, 
+                    null);
     }
 
     /**
@@ -340,7 +177,7 @@ public class World {
     public void fillBuffer() {
         for (int y = 0; y < WORLD_HEIGHT; y++) {
             for (int x = 0; x < WORLD_WIDTH; x++) {
-                g.drawImage(tp.get(world[y][x]), 
+                g.drawImage(tp.get(world.getCell(x, y)), 
                             x * CELL_SIZE, 
                             (WORLD_HEIGHT - 1 - y) * CELL_SIZE, 
                             null);            
@@ -372,7 +209,6 @@ public class World {
         //Draw the infinite background
         int h;
         int v = offsetY % CELL_SIZE + comp.getHeight();
-//        System.out.println("v = " + v + "; v > " + 0);
         for (; v > -background.getHeight(); v -= background.getHeight()) {
             h = -(offsetX % CELL_SIZE) - CELL_SIZE;
             for (; h < comp.getWidth(); h += background.getWidth()) {
@@ -382,5 +218,13 @@ public class World {
         
         //Draw the important tiles into place.
         page.drawImage(precomp, x, y, null);
+    }
+    
+    /** 
+     * Get the start location for this world.
+     * @return the player start location 
+     */
+    public Point getStart() {
+        return start;
     }
 }

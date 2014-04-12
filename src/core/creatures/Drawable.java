@@ -1,5 +1,5 @@
 /** Joe Pelz, Set A, A00893517 */
-package core;
+package core.creatures;
 
 import java.awt.Component;
 import java.awt.Dimension;

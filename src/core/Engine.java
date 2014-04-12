@@ -11,6 +11,11 @@ import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
+import core.creatures.Burst;
+import core.creatures.Drawable;
+import core.creatures.Hero;
+import core.world.World;
+
 /**
  * 
  * <p>This class does the primary computation in making this 
@@ -92,9 +97,7 @@ public class Engine extends JPanel implements Runnable {
         //init hero
         hero = new Hero();
         hero.setImage(tp.get(Texture.hero));
-        //hero.setImage(Texture.hero.get());
-        final int startLocation = 300;
-        hero.setPos(0, startLocation);
+        hero.setPos(world.getStart());
 
         if (thread == null) {
             running = true;

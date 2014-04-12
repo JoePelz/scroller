@@ -1,9 +1,12 @@
 /** Joe Pelz, Set A, A00893517 */
-package core;
+package core.creatures;
 
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
+
+import core.Dynamic;
+import core.Vector2D;
 
 
 
