@@ -48,6 +48,8 @@ public class Engine extends JPanel implements Runnable {
     private static final double JUMP  = 600;
     /** World movement speed in pixels per click. */
     private static final int SCROLL_SPEED = 5;
+    /** How far you can fall before game over. */
+    private static final int LOWER_BOUND = -100;
     
     
     /** The thread that runs the main loop and animates the worm. */
@@ -231,10 +233,21 @@ public class Engine extends JPanel implements Runnable {
                 lowerLeft.y + d.height - 1);
         int cell = World.CELL_SIZE;
 
+        //If x is negative, offset by 1. It sucks but is necessary.
+        if (lowerLeft.x < 0) {
+            lowerLeft.x -= cell;
+        }
+        if (upperRight.x < 0) {
+            upperRight.x -= cell;
+        }
+        
+        //Convert pixel coordinates to world coordinates.
         lowerLeft.x /= cell;
         lowerLeft.y /= cell;
         upperRight.x /= cell;
         upperRight.y /= cell;
+        
+        //Test for overlap with the target block type
         for (int x = (lowerLeft.x); x <= (upperRight.x); x++) {
             for (int y = (lowerLeft.y); y <= (upperRight.y); y++) {
                 if (world.getCell(x, y) == target) {
@@ -373,7 +386,7 @@ public class Engine extends JPanel implements Runnable {
             updateCamPos();
             
             //Test 'victory' conditions
-            if (pos.y < 0) {
+            if (pos.y < LOWER_BOUND) {
                 running = false;
             }
             
