@@ -1,0 +1,251 @@
+/** Joe Pelz, Set A, A00893517 */
+package core.world;
+
+import java.awt.Point;
+import java.io.InputStream;
+import java.util.Scanner;
+
+import core.Texture;
+
+
+/**
+ * <p>This class merely stores data about a level. </p>
+ * @author Joe Pelz, Set A, A00893517
+ * @version 1.0
+ */
+public class Level {
+    /** The directory levels are stored in. */
+    private static final String BASE_PATH = "/levels/";
+    /** The rows in this level. */
+    private final int rows;
+    /** The cols in this level. */
+    private final int cols;
+    /** The array that holds level data. */
+    private Texture[][] map;
+    /** Where the player should start. */
+    private Point start = new Point(0, 2);
+    /** Where the player should exit. */
+    private Point exit = new Point(0, -1);
+    /**
+     * Constructor to initialize a level from a file.
+     * @param path The name of the file to populate the level from
+     */
+    public Level(String path) {
+        //Open the file for reading
+        InputStream in = getClass().getResourceAsStream(BASE_PATH + path);
+        Scanner scan = new Scanner(in);
+        
+        //Set the array size
+        cols = scan.nextInt();
+        rows = scan.nextInt();
+        map = new Texture[cols][rows];
+        char[][] cMap = new char[cols][rows];
+        char c = '0';
+        scan.nextLine();
+        String line; 
+
+        //fill library from text file
+        for (int row = rows - 1; row >= 0; row--) {
+            line = scan.nextLine();
+            for (int col = 0; col < cols; col++) {
+                c = line.charAt(col);
+                cMap[col][row] = c;
+                if (c == 'I') {
+                    start = new Point(col, row);
+                }
+                if (c == 'O') {
+                    exit = new Point(col, row);
+                }
+            }
+        }
+        scan.close();
+        
+        init(cMap);
+    }
+    
+    /**
+     * Constructor to initialize a level from a file.
+     * @param tx The data to gen the level from.
+     */
+    public Level(Texture[][] tx) {
+        //Set the array size
+        cols = tx.length;
+        rows = tx[0].length;
+        map = new Texture[cols][rows];
+
+        init(tx);
+    }
+    
+    /**
+     * Constructor to initialize a level of a particular with bg blocks.
+     * @param rows How tall the level is
+     * @param cols How wide the level is
+     */
+    public Level(int cols, int rows) {
+        this.cols = cols;
+        this.rows = rows;
+        map = new Texture[cols][rows];
+        initEmpty();
+        final int defaultStart = 10;
+        start = new Point(0, defaultStart);
+    }
+    
+    /**
+     * Initialize the level to be empty.
+     */
+    private void initEmpty() {
+        for (int col = 0; col < cols; col++) {
+            for (int row = 0; row < rows; row++) {
+                map[col][row] = Texture.bg;
+            }
+        }
+    }
+    
+    /**
+     * Initialize a level from an array.
+     * @param data An array representing the blocks to make the world from.
+     */
+    private void init(Texture[][] data) {
+        if (data.length != map.length || data[0].length != map[0].length) {
+            throw new IllegalArgumentException("data array "
+                    + "does not match level size!");
+        }
+        
+        for (int col = 0; col < cols; col++) {
+            for (int row = 0; row < rows; row++) {
+                map[col][row] = data[col][row];
+            }
+        }
+    }
+    
+    /**
+     * Initialize a level from an byte array.
+     * @param data An array representing the blocks to make the world from.
+     */
+    private void init(char[][] data) {
+        if (data.length != map.length || data[0].length != map[0].length) {
+            throw new IllegalArgumentException("data array "
+                    + "does not match level size!");
+        }
+        
+        for (int col = 0; col < cols; col++) {
+            for (int row = 0; row < rows; row++) {
+                map[col][row] = translate(data[col][row]);
+            }
+        }
+    }
+
+    /**
+     * Translate a text file byte into a Texture. 
+     * @param b the byte that was read.
+     * @return The corresponding Texture type.
+     */
+    private Texture translate(char b) {
+        switch (b) {
+        case '-':
+            return Texture.bg;
+        case 'i':
+            return Texture.bgLight;
+        case '#':
+            return Texture.brick;
+        default:
+            return Texture.bg;
+        }
+    }
+
+    /**
+     * paste a level into another level.
+     * @param bottom the y coordinate to paste the bottom of the new level at.
+     * @param left the x coordinate to paste the left edge of the new level at.
+     * @param v The new level to paste on top.
+     */
+    public void pasteLevel(int bottom, int left, Level v) {
+        for (int col = left; col < left + v.getCols(); col++) {
+            for (int row = bottom; row < bottom + v.getRows(); row++) {
+                map[col][row] = v.getCell(col, row);
+            }
+        }
+    }
+    
+    /**
+     * Test if a coordinate is in bounds.
+     * @param col the col to test
+     * @param row the row to test
+     * @return true if (row,col) is inside the array
+     */
+    public boolean isInBounds(int col, int row) {
+        if (row < 0 || row >= rows) {
+            return false;
+        }
+        if (col < 0 || col >= cols) {
+            return false;
+        }
+        return true;
+    }
+    
+    /**
+     * Set a cell in the level to a particular value.
+     * @param col the col to adjust
+     * @param row the row to adjust
+     * @param tx the texture to set
+     */
+    public void setCell(int col, int row, Texture tx) {
+        if (!isInBounds(col, row)) {
+            //target (13,4) out of bounds (0:10), (0:50).
+            throw new IllegalArgumentException("target (" + row
+                    + "," + col + ") out of bounds (0:" + rows
+                    + "), (0:" + cols + ".");
+        }
+        map[col][row] = tx;
+    }
+    
+    /**
+     * Get the cell's value at the given coordinates.
+     * @param col the column to inspect
+     * @param row the row to inspect 
+     * @return The value at the given coordinate.
+     */
+    public Texture getCell(int col, int row) {
+        if (isInBounds(col, row)) {
+            return map[col][row];
+        } else {
+            return Texture.bg;
+        }
+    }
+
+    /**
+     * accessor for columns.
+     * @return the number of columns (width) in the level
+     */
+    public int getCols() {
+        return cols;
+    }
+    /**
+     * accessor for rows.
+     * @return the number of rows (height) in the level
+     */
+    public int getRows() {
+        return rows;
+    }
+    /**
+     * accessor for start location.
+     * @return The point to start at
+     */
+    public Point getStart() {
+        return start;
+    }
+    /**
+     * mutator for start location.
+     * @param newStart The point to start at
+     */
+    public void setStart(Point newStart) {
+        start = newStart;
+    }
+    /**
+     * accessor for exit location.
+     * @return The point where the player exits the level
+     */
+    public Point getExit() {
+        return exit;
+    }
+}
