@@ -4,7 +4,9 @@ package core.creatures;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
+import java.awt.Rectangle;
 
+import core.Drawable;
 import core.Dynamic;
 import core.Vector2D;
 
@@ -112,5 +114,15 @@ public class Hero extends Drawable implements Dynamic {
     public void setOnGround(boolean onGround) {
         this.onGround = onGround;
     }
-
+    
+    @Override
+    public Rectangle getBounds() {
+        Rectangle bounds = super.getBounds();
+//        bounds.x -= (bounds.width  * (1 - CBOX_SCALE) / 2);
+//        bounds.y -= (bounds.height * (1 - CBOX_SCALE) / 2);
+//        bounds.width  *= CBOX_SCALE;
+//        bounds.height *= CBOX_SCALE;
+        
+        return bounds;
+    }
 }

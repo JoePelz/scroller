@@ -1,10 +1,11 @@
 /** Joe Pelz, Set A, A00893517 */
-package core.creatures;
+package core.effects;
 
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 
+import core.Drawable;
 import core.Texture;
 import core.TexturePack;
 

@@ -11,9 +11,10 @@ import java.util.ArrayList;
 
 import javax.swing.JPanel;
 
-import core.creatures.Burst;
-import core.creatures.Drawable;
 import core.creatures.Hero;
+import core.effects.Burst;
+import core.props.Filter;
+import core.props.Light;
 import core.world.World;
 
 /**
@@ -80,6 +81,10 @@ public class Engine extends JPanel implements Runnable {
     private TexturePack tp = new TexturePack("/images/");
     /** The special effects used. */
     private ArrayList<Drawable> effects = new ArrayList<Drawable>();
+    /** The lights in use. */
+    private ArrayList<Filter> filters = new ArrayList<Filter>();
+    /** The triggerable events in use. */
+    private ArrayList<Trigger> triggers = new ArrayList<Trigger>();
     
     /**
     * Constructor: Sets up this panel and loads the images.
@@ -104,6 +109,17 @@ public class Engine extends JPanel implements Runnable {
             thread = new Thread(this);
             thread.start();
         }
+        
+        //init test light
+        Point[] bgLights = world.getAll(Texture.bgLight);
+        Light tempLight;
+        for (Point light : bgLights) {
+            tempLight = new Light(light.x * 30 + 15, light.y * 30 + 15, world);
+            filters.add(tempLight);
+            triggers.add(tempLight);
+        }
+        world.filter(filters);
+        
     }
 
     /**
@@ -179,7 +195,7 @@ public class Engine extends JPanel implements Runnable {
         obj.applyDrag(seconds);
         
         // 2. add forces
-        obj.addForce(new Vector2D(0, GRAVITY));
+//        obj.addForce(new Vector2D(0, GRAVITY));
         obj.addForce(keyForce);
         
         // 3. apply forces
@@ -195,6 +211,7 @@ public class Engine extends JPanel implements Runnable {
         
         // 5. a) resolve collisions in x
         Point bad = getWorldCollision(obj, Texture.brick);
+        bad = null;
         if (bad != null) {
             int resolution = world.escapeX(obj, vel.x * seconds, bad);
 
@@ -208,6 +225,7 @@ public class Engine extends JPanel implements Runnable {
         
         // 5. b) resolve collisions in y
         bad = getWorldCollision(obj, Texture.brick);
+        bad = null;
         if (bad != null) {
             int resolution = world.escapeY(obj, vel.y * seconds, bad);
             if (vel.y < 0) {
@@ -394,7 +412,7 @@ public class Engine extends JPanel implements Runnable {
             }
             
             //Test world events (like touching a light)
-            testWorldEvents();
+            testTriggers(triggers);
             
             //Delete (release) dead effects.
             deleteDeadEntities();
@@ -426,14 +444,17 @@ public class Engine extends JPanel implements Runnable {
     /**
      * Tests if the hero triggers world events, like by touching a light.
      */
-    private void testWorldEvents() {
-        Point light = getWorldCollision(hero, Texture.bgLight);
-        if ((light != null)) {
-            Drawable burst = new Burst(tp);
-            burst.setPos(light.x * World.CELL_SIZE + World.CELL_SIZE / 2, 
-                         light.y * World.CELL_SIZE + World.CELL_SIZE / 2);
-            world.setCell(light.x, light.y, Texture.bgLightDead);
-            effects.add(burst);
+    private void testTriggers(ArrayList<Trigger> triggers) {
+        for (Trigger trigger : triggers) {
+            if (trigger.isTriggered(hero.getBounds())) {
+                trigger.triggerAction();
+                Drawable burst = new Burst(tp);
+                burst.setPos(((Light) trigger).getPos());
+                effects.add(burst);
+                if (trigger instanceof Light) {  
+                world.filter((Filter) trigger, filters);
+                }
+            }
         }
     }
 

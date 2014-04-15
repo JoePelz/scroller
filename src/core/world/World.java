@@ -4,11 +4,16 @@ package core.world;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.awt.image.ColorModel;
+import java.awt.image.WritableRaster;
+import java.util.ArrayList;
 
 import core.Dynamic;
 import core.Texture;
 import core.TexturePack;
+import core.props.Filter;
 
 
 /**
@@ -37,12 +42,14 @@ public class World {
 
     /** The texture pack to use. NOT toilet paper. */
     private TexturePack tp;
-    /** The pre-computed image to draw for the bg. */
+    /** The pre-computed image off all the tiles. */
     private BufferedImage precomp;
+    /** The output image off all the tiles. */
+    private BufferedImage fincomp;
     /** The pre-computed image to draw for the bg. */
     private BufferedImage background;
-    /** Graphics handle for the buffered image. */
-    private Graphics g;
+    /** Graphics handle for the buffered precomp. */
+    private Graphics gPre;
     /** Graphics handle for the background. */
     private Graphics gBG;
     
@@ -57,19 +64,22 @@ public class World {
 
 //        world = RandomLevel.genWorldRandom(WORLD_WIDTH, WORLD_HEIGHT);
 //        world = RandomLevel.genWorldHills(WORLD_WIDTH, WORLD_HEIGHT);
-//        world = new Level("house.txt");
-        world = RandomLevel.genWorldPlatform(WORLD_WIDTH, WORLD_HEIGHT);
+//        world = RandomLevel.genWorldPlatform(WORLD_WIDTH, WORLD_HEIGHT);
+        world = new Level("house.txt");
         
         start = world.getStart();
         start = new Point(start.x * CELL_SIZE, start.y * CELL_SIZE);
-        
+
         precomp = new BufferedImage(CELL_SIZE * WORLD_WIDTH, 
                 CELL_SIZE * WORLD_HEIGHT, 
                 BufferedImage.TYPE_INT_ARGB);
+        fincomp = new BufferedImage(CELL_SIZE * WORLD_WIDTH, 
+                CELL_SIZE * WORLD_HEIGHT, 
+                BufferedImage.TYPE_INT_ARGB);
         background = new BufferedImage(CELL_SIZE * BG_BUFFER_SIZE, 
-                                       CELL_SIZE * BG_BUFFER_SIZE,
-                                       BufferedImage.TYPE_INT_RGB);
-        g = precomp.createGraphics();
+                CELL_SIZE * BG_BUFFER_SIZE,
+                BufferedImage.TYPE_INT_RGB);
+        gPre = precomp.createGraphics();
         gBG = background.createGraphics();
         fillBuffer();
         fillBGBuffer();
@@ -94,7 +104,7 @@ public class World {
      */
     public void setCell(int x, int y, Texture type) {
         world.setCell(x, y, type);
-        g.drawImage(tp.get(type), 
+        gPre.drawImage(tp.get(type), 
                     x * CELL_SIZE, 
                     (WORLD_HEIGHT - 1 - y) * CELL_SIZE, 
                     null);
@@ -177,13 +187,109 @@ public class World {
     public void fillBuffer() {
         for (int y = 0; y < WORLD_HEIGHT; y++) {
             for (int x = 0; x < WORLD_WIDTH; x++) {
-                g.drawImage(tp.get(world.getCell(x, y)), 
+                gPre.drawImage(tp.get(world.getCell(x, y)), 
                             x * CELL_SIZE, 
                             (WORLD_HEIGHT - 1 - y) * CELL_SIZE, 
                             null);            
             }
         }
+        
+        fincomp = deepCopy(precomp);
+    }
 
+    public void filter(ArrayList<Filter> entities) {
+        fincomp = deepCopy(precomp);
+
+        for (Filter entity : entities) {
+            if (entity.isActive()) {
+                entity.filter(fincomp, fincomp);
+            }
+        }
+    }
+    
+    public void filter(Filter entity) {
+        if (entity.isActive()) {
+            entity.filter(precomp, fincomp);
+        }
+    }
+    
+    public void filter(Filter primary, ArrayList<Filter> entities) {
+        //get the right region
+//        Rectangle region = primary.getInfluence();
+        //copy from precomp over that region
+//        fincomp = deepCopy(precomp, region);
+//        for (Filter entity : entities) {
+            //find lights that affect the relevant region
+//            if (entity.isInInfluence(region)) {
+                //TODO: note:
+                //MUST ONLY FILTER ON THE GIVEN REGION!!!
+                //TODO: don't forget.
+//                entity.filter(fincomp, fincomp);
+//            }
+//        }
+        //run filter for the relevant lights
+        
+        for (Filter entity : entities) {
+            if (entity.isActive()) {
+                entity.filter(fincomp, fincomp);
+            }
+        }
+    }
+        
+    
+    /**
+     * Gets all the bricks that match the given texture.
+     * @param tx the texture to match
+     * @return An array of matching locations.
+     */
+    public Point[] getAll(Texture tx) {
+        //how much to increment the array by each time.
+        final int increment = 20;
+        //make array size 0
+        Point[] result = new Point[0];
+        Point[] temp;
+        int y = 0;
+        int x = 0;
+        byte lightCount = 0;
+        
+        //while iteration is incomplete
+        while (x < WORLD_WIDTH && y < WORLD_HEIGHT) {
+            
+            //if out of space, resize the array
+            if (lightCount == result.length) {
+                temp = new Point[result.length + increment];
+                for (int i = 0; i < temp.length; i++) {
+                    if (i < result.length) {
+                        temp[i] = result[i];
+                    }
+                }
+                result = temp;
+            }
+            
+            //Advance through the array
+            y++;
+            if (y >= WORLD_HEIGHT) {
+                y = 0;
+                x++;
+            }
+            
+            //add to array if matching
+            if (getCell(x, y) == tx) {
+                result[lightCount] = new Point(x, y);
+                lightCount++;
+            }
+        
+        }
+        
+        //crop array to minimum size
+        temp = result;
+        result = new Point[lightCount];
+        for (int i = 0; i < lightCount; i++) {
+            result[i] = temp[i];
+        }
+        
+        //return result
+        return result;
     }
     
     /**
@@ -217,7 +323,7 @@ public class World {
         }
         
         //Draw the important tiles into place.
-        page.drawImage(precomp, x, y, null);
+        page.drawImage(fincomp, x, y, null);
     }
     
     /** 
@@ -226,5 +332,27 @@ public class World {
      */
     public Point getStart() {
         return start;
+    }
+    
+    /**
+     * Take from Stack Exchange. Duplicates the given buffered image.
+     * http://stackoverflow.com/questions/3514158/
+     * how-do-you-clone-a-bufferedimage
+     * 
+     * @param bi BufferedImage to copy
+     * @return duplicate of input BufferedImage
+     */
+    static BufferedImage deepCopy(BufferedImage bi) {
+        ColorModel cm = bi.getColorModel();
+        boolean isAlphaPremultiplied = cm.isAlphaPremultiplied();
+        WritableRaster raster = bi.copyData(null);
+        return new BufferedImage(cm, raster, isAlphaPremultiplied, null);
+    }
+
+    public int getWidthPixels() {
+        return WORLD_WIDTH * CELL_SIZE;
+    }
+    public int getHeightPixels() {
+        return WORLD_HEIGHT * CELL_SIZE;
     }
 }

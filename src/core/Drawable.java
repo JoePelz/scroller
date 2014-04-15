@@ -1,11 +1,12 @@
 /** Joe Pelz, Set A, A00893517 */
-package core.creatures;
+package core;
 
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
+import java.awt.Rectangle;
 
 /**
  * <p>Base class for drawable entities.  Stores position and image 
@@ -40,6 +41,13 @@ public class Drawable {
      */
     public Dimension getSize() {
         return new Dimension(brush.getWidth(null), brush.getHeight(null));
+    }
+    /**
+     * Get the bounding box for a Drawable entity.
+     * @return the bounding rectangle of the entity.
+     */
+    public Rectangle getBounds() {
+        return new Rectangle(pos.x, pos.y, brush.getWidth(null), brush.getHeight(null));
     }
     /**
      * Set an absolute position for the entity.
