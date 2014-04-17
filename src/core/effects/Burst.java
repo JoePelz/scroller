@@ -5,7 +5,7 @@ import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Graphics;
 
-import core.Drawable;
+import core.Entity;
 import core.Texture;
 import core.TexturePack;
 
@@ -14,7 +14,7 @@ import core.TexturePack;
  * @author Joe Pelz, Set A, A00893517
  * @version 1.0
  */
-public class Burst extends Drawable {
+public class Burst extends Entity {
     /** to make a circle instead of a square. */
     private static final double DIAG_FACTOR = 0.707;
     /** Nanoseconds per second. */

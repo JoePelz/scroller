@@ -6,7 +6,7 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 
-import core.Drawable;
+import core.Entity;
 import core.Dynamic;
 import core.Vector2D;
 
@@ -17,7 +17,7 @@ import core.Vector2D;
  * @author Joe Pelz, Set A, A00893517
  * @version 1.0
  */
-public class Hero extends Drawable implements Dynamic {
+public class Hero extends Entity implements Dynamic {
     /** How much drag to apply to the hero's motion. */
     private static final double DRAG_FACTOR = 5;
     /** How strong vertical drag is relative to horizontal. */

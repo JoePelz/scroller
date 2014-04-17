@@ -15,6 +15,8 @@ import core.creatures.Hero;
 import core.effects.Burst;
 import core.props.Filter;
 import core.props.Light;
+import core.world.Level;
+import core.world.RandomLevel;
 import core.world.World;
 
 /**
@@ -67,6 +69,8 @@ public class Engine extends JPanel implements Runnable {
     /** How many milliseconds between frames. */
     private long targetTime = MS_PER_S / INIT_FPS;
     
+    /** The rendering engine. */
+    private Renderer renderer = new Renderer();
     /** The actual world to explore. */
     private World world;
     /** The camera's x position. */
@@ -80,7 +84,7 @@ public class Engine extends JPanel implements Runnable {
     /** The set of textures to use. */
     private TexturePack tp = new TexturePack("/images/");
     /** The special effects used. */
-    private ArrayList<Drawable> effects = new ArrayList<Drawable>();
+    private ArrayList<Entity> effects = new ArrayList<Entity>();
     /** The lights in use. */
     private ArrayList<Filter> filters = new ArrayList<Filter>();
     /** The triggerable events in use. */
@@ -104,22 +108,25 @@ public class Engine extends JPanel implements Runnable {
         hero.setImage(tp.get(Texture.hero));
         hero.setPos(world.getStart());
 
+        
+        renderer.setWorld(world.getLevel());
+        
+        //init test light
+        Point[] bgLights = world.getAll(Texture.bgLightDead);
+        Light tempLight;
+        for (Point light : bgLights) {
+            tempLight = new Light(light.x * 30 + 15, light.y * 30 + 15, world);
+            renderer.addProp(tempLight);
+            triggers.add(tempLight);
+        }
+//        artist.addProp(new Light(210, 60, world));
+
+        //Don't start this loop until setup is complete! 
         if (thread == null) {
             running = true;
             thread = new Thread(this);
             thread.start();
         }
-        
-        //init test light
-        Point[] bgLights = world.getAll(Texture.bgLight);
-        Light tempLight;
-        for (Point light : bgLights) {
-            tempLight = new Light(light.x * 30 + 15, light.y * 30 + 15, world);
-            filters.add(tempLight);
-            triggers.add(tempLight);
-        }
-        world.filter(filters);
-        
     }
 
     /**
@@ -130,11 +137,13 @@ public class Engine extends JPanel implements Runnable {
         super.paintComponent(page);
         setForeground(Color.cyan);
         
-        world.draw(page, this, offX, offY);
+//        world.draw(page, this, offX, offY);
+        
+        renderer.draw(page, this, offX, offY);
         
         hero.draw(this, page, offX, offY);
         
-        for (Drawable effect : effects) {
+        for (Entity effect : effects) {
             if (effect instanceof Burst) {
                 Burst pop = (Burst) effect;
                 pop.draw(this, page, offX, offY);
@@ -195,7 +204,7 @@ public class Engine extends JPanel implements Runnable {
         obj.applyDrag(seconds);
         
         // 2. add forces
-//        obj.addForce(new Vector2D(0, GRAVITY));
+        obj.addForce(new Vector2D(0, GRAVITY));
         obj.addForce(keyForce);
         
         // 3. apply forces
@@ -211,7 +220,7 @@ public class Engine extends JPanel implements Runnable {
         
         // 5. a) resolve collisions in x
         Point bad = getWorldCollision(obj, Texture.brick);
-        bad = null;
+//        bad = null;
         if (bad != null) {
             int resolution = world.escapeX(obj, vel.x * seconds, bad);
 
@@ -225,7 +234,7 @@ public class Engine extends JPanel implements Runnable {
         
         // 5. b) resolve collisions in y
         bad = getWorldCollision(obj, Texture.brick);
-        bad = null;
+//        bad = null;
         if (bad != null) {
             int resolution = world.escapeY(obj, vel.y * seconds, bad);
             if (vel.y < 0) {
@@ -448,11 +457,11 @@ public class Engine extends JPanel implements Runnable {
         for (Trigger trigger : triggers) {
             if (trigger.isTriggered(hero.getBounds())) {
                 trigger.triggerAction();
-                Drawable burst = new Burst(tp);
+                Entity burst = new Burst(tp);
                 burst.setPos(((Light) trigger).getPos());
                 effects.add(burst);
-                if (trigger instanceof Light) {  
-                world.filter((Filter) trigger, filters);
+                if (trigger instanceof Drawable) {  
+                    renderer.invalidate(((Drawable) trigger).getBounds());
                 }
             }
         }
@@ -462,13 +471,13 @@ public class Engine extends JPanel implements Runnable {
      * Removes dead effects and other inactive entities.
      */
     private void deleteDeadEntities() {
-        ArrayList<Drawable> deadFX = new ArrayList<Drawable>();
+        ArrayList<Entity> deadFX = new ArrayList<Entity>();
         
-        for (Drawable effect : effects) {
+        for (Entity effect : effects) {
             if (effect instanceof Burst) {
                 Burst pop = (Burst) effect;
                 if (pop.isDead()) {
-                    deadFX.add((Drawable) pop);
+                    deadFX.add((Entity) pop);
                 }
             }
         }

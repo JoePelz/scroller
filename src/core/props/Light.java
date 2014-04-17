@@ -6,8 +6,10 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.WritableRaster;
 
+import core.Drawable;
 import core.Texture;
 import core.Trigger;
+import core.Util;
 import core.world.World;
 
 /**
@@ -15,7 +17,7 @@ import core.world.World;
  * @author Joe Pelz, Set A, A00893517
  * @version 1.0
  */
-public class Light implements Filter, Trigger {
+public class Light implements Filter, Trigger, Drawable {
     /** Bit-shift value for red in integer colors. */
     private static final byte R_SHIFT = 16;
     /** Bit-shift value for green in integer colors. */
@@ -35,11 +37,13 @@ public class Light implements Filter, Trigger {
     private boolean isActive;
 
     /** The red component of the light color. */
-    private int r = 255;
+    private int r = 210;
     /** The green component of the light color. */
-    private int g = 255;
+    private int g = 180;
     /** The blue component of the light color. */
-    private int b = 255;
+    private int b = 130;
+    /** The pixels for the visual overlay of the light. */
+    private double[][][] pixels;
     
     /** The light radius, default 100. */
     private short lightRadius = 100;
@@ -56,10 +60,12 @@ public class Light implements Filter, Trigger {
     public Light(int x, int y, World world) {
         pos = new Point(x, y);
         isActive = true;
-        isOn = true;
+        isOn = false;
         this.worldHandle = world;
         wpos = new Point(x / World.CELL_SIZE, y / World.CELL_SIZE);
         updateBounds(world);
+        pixels = new double[bounds.width][bounds.height][Util.CHANNELS];
+        updatePixels();
     }
 
     /**
@@ -67,13 +73,11 @@ public class Light implements Filter, Trigger {
      * @param world The world to clamp the light's influence by
      */
     private void updateBounds(World world) {
-        int posX = pos.x;
-        int posY = world.getHeightPixels() - pos.y;
         bounds = new Rectangle(
-                Math.max(posX - lightRadius, 0), 
-                Math.max(posY - lightRadius, 0), 
-                Math.min(lightRadius * 2, world.getWidthPixels() - (posX - lightRadius)), 
-                Math.min(lightRadius * 2, world.getHeightPixels() - (posY - lightRadius)));
+                pos.x - lightRadius, 
+                pos.y - lightRadius, 
+                lightRadius * 2, 
+                lightRadius * 2);
     }
 
     /**
@@ -141,44 +145,7 @@ public class Light implements Filter, Trigger {
 
     @Override
     public void filter(BufferedImage source, BufferedImage destination) {
-        int posY = source.getHeight() - pos.y;
-        WritableRaster raster;
-        //I'm not sure if this is a good idea...
-        raster = (WritableRaster) source.getData(bounds);
-        if (!isOn) {
-            destination.setData(raster);
-            return;
-        }
-        
-        int[] c = {255, 255, 255, 255};
-        double distance;
-        
-        for (int y = bounds.y; y < bounds.y + bounds.height; y++) {
-            for (int x = bounds.x; x < bounds.x + bounds.width; x++) {
-                c = raster.getPixel(x, y, c); 
-//                if (x % 5 == 0 && y % 5 == 0)
-//                    System.out.println("0: " + c[0] + "\t1: " + c[1] + "\t2: " + c[2] + "\t3: " + c[3]);
-                //Get pixel distance from light source
-                distance = getDistance(x, pos.x, y, posY);
-                /* Convert distance to 0:1 with 1 at the light 
-                 * and 0 at the perimeter circle. Clamp negatives.*/
-                distance = Math.max(0, 1 - (distance / lightRadius));
-                distance = Math.pow(distance, 2);
-                
-                // Add the lighting to the pixels
-                c[0] = (int) (distance * r + c[0]);
-                c[1] = (int) (distance * g + c[1]);
-                c[2] = (int) (distance * b + c[2]);
-
-                c[0] = Math.min(c[0], 255);
-                c[1] = Math.min(c[1], 255);
-                c[2] = Math.min(c[2], 255);
-                
-                raster.setPixel(x, y, c);
-            }
-        }
-        
-        destination.setData(raster);
+        return;
     }
 
     @Override
@@ -216,7 +183,59 @@ public class Light implements Filter, Trigger {
             worldHandle.setCell(wpos.x, wpos.y, Texture.bgLight);
         }
         //filter the world
-        worldHandle.filter(this);
+        updatePixels();
         
+    }
+
+    public void updatePixels() {
+        //Center of light glow
+        int cX = lightRadius;
+        int cY = lightRadius;
+        double distance;
+        if(isOn) {
+            for (int x = 0; x < bounds.width; x++) {
+                for (int y = 0; y < bounds.height; y++) {
+                    
+                    //Get pixel distance from light source
+                    distance = getDistance(x, cX, y, cY);
+                    /* Convert distance to 0:1 with 1 at the light 
+                     * and 0 at the perimeter circle. Clamp negatives.*/
+                    distance = Math.max(0, 1 - (distance / lightRadius));
+                    distance = Math.pow(distance, 3);
+                    
+                    //TODO: This should only need to calculate one quadrant
+                    //It would be identical in other quadrants.
+                    pixels[x][y][Util.R] = distance * r / 255.0;
+                    pixels[x][y][Util.G] = distance * g / 255.0;
+                    pixels[x][y][Util.B] = distance * b / 255.0;
+                    pixels[x][y][Util.A] = 1.0;
+                }
+            }
+        } else {
+            for (int x = 0; x < bounds.width; x++) {
+                for (int y = 0; y < bounds.height; y++) {
+                    pixels[x][y][Util.R] = 0.0;
+                    pixels[x][y][Util.G] = 0.0;
+                    pixels[x][y][Util.B] = 0.0;
+                    pixels[x][y][Util.A] = 0.0;
+                }
+            }
+        }
+    }
+    
+    @Override
+    public double[][][] getPixels() {
+        return pixels;
+    }
+
+    @Override
+    public Rectangle getBounds() {
+        return bounds;
+    }
+
+    @Override
+    public short getDrawType() {
+        // TODO Auto-generated method stub
+        return 1;
     }
 }

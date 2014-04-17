@@ -5,6 +5,7 @@ import java.awt.Point;
 import java.util.Random;
 
 import core.Texture;
+import core.TexturePack;
 
 /**
  * <p>This is a static class that generates random levels for play.</p>
@@ -26,14 +27,15 @@ public class RandomLevel {
      * Populate the world with random simple blocks.
      * @param cols The number of columns (wide) the level is.
      * @param rows The number of rows (tall) the level is.
+     * @param tp The texture pack to use as source.
      * @return The generated level.
      */
-    public static Level genWorldRandom(int cols, int rows) {
+    public static Level genWorldRandom(int cols, int rows, TexturePack tp) {
         /** Brick density. */
         final double pBrick = 0.8;
         /** Probability of a light in the bg. */
         final double pLight = 0.02;
-        Level level = new Level(cols, rows);
+        Level level = new Level(cols, rows, tp);
         
         for (int row = 0; row < rows; row++) {
             for (int col = 0; col < cols; col++) {
@@ -43,7 +45,7 @@ public class RandomLevel {
                 } else {
                     //background bricks
                     if (GEN.nextDouble() < pLight) {
-                        level.setCell(col, row, Texture.bgLight);
+                        level.setCell(col, row, Texture.bgLightDead);
                     } else {
                         level.setCell(col, row, Texture.bg);
                     }
@@ -59,9 +61,10 @@ public class RandomLevel {
      * Populate the world with a flat(ish) landscape.
      * @param cols The number of columns (wide) the level is.
      * @param rows The number of rows (tall) the level is.
+     * @param tp The texture pack to use as source.
      * @return The generated level.
      */
-    public static Level genWorldHills(int cols, int rows) {
+    public static Level genWorldHills(int cols, int rows, TexturePack tp) {
         //Chance for ground level to rise
         final double pUp = 0.2;
         //Chance for ground level to drop
@@ -73,7 +76,7 @@ public class RandomLevel {
         //(pblty diminishes with each additional block)
         final double pHoleIsBig = 0.5;
         
-        Level level = new Level(cols, rows);
+        Level level = new Level(cols, rows, tp);
 
 
         boolean hole = false;
@@ -113,7 +116,7 @@ public class RandomLevel {
                                         ? Texture.brick 
                                         : Texture.bg);
                 if (lit && row == litEl) {
-                    level.setCell(col, litEl, Texture.bgLight);
+                    level.setCell(col, litEl, Texture.bgLightDead);
                 }
             }
         }
@@ -129,11 +132,12 @@ public class RandomLevel {
      * Populate the world with a platform sequence landscape.
      * @param cols The number of columns (wide) the level is.
      * @param rows The number of rows (tall) the level is.
+     * @param tp The texture pack to use as source.
      * @return The generated level.
      */
-    public static Level genWorldPlatform(int cols, int rows) {
+    public static Level genWorldPlatform(int cols, int rows, TexturePack tp) {
         //initialize an empty world
-        Level level = new Level(cols, rows);
+        Level level = new Level(cols, rows, tp);
 
         final double pHole = 0.3;
         Point pos = new Point(0, 0);
@@ -184,7 +188,7 @@ public class RandomLevel {
             if (GEN.nextDouble() < P_LIGHT) {
                 litEl = GEN.nextInt(LIGHT_RANGE) + LIGHT_MIN;
                 litEl = Math.min(pos.y + litEl, rows - 1);
-                level.setCell(col, litEl, Texture.bgLight);
+                level.setCell(col, litEl, Texture.bgLightDead);
             }
         }
         level.setStart(new Point(0, rows));
@@ -195,10 +199,11 @@ public class RandomLevel {
      * Populate the world with fragments from a text file.
      * @param cols The number of columns (wide) the level is.
      * @param rows The number of rows (tall) the level is.
+     * @param tp The texture pack to use as source.
      */
-    public static void genWorldFragments(int cols, int rows) {
-        Level testLev = new Level(cols, rows);
+    public static void genWorldFragments(int cols, int rows, TexturePack tp) {
+        Level testLev = new Level(cols, rows, tp);
 
-        Level testLev3 = new Level("fragments.txt");
+        Level testLev3 = new Level("fragments.txt", tp);
     }
 }

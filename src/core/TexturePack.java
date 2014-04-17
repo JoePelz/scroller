@@ -3,6 +3,7 @@ package core;
 
 import java.awt.Image;
 import java.awt.Toolkit;
+import java.awt.image.BufferedImage;
 import java.net.URL;
 
 import javax.swing.ImageIcon;
@@ -18,6 +19,8 @@ public class TexturePack {
     private ImageIcon[] images = new ImageIcon[Texture.values().length];
     /** Stores the actual images. */
     private Image[] imgs = new Image[Texture.values().length];
+    /** Stores the pixels of each image. */
+    private double[][][][] pixels = new double[Texture.values().length][0][0][0];
     
     /**
      * Constructor, that requires the user to supply a path to the images.
@@ -27,20 +30,37 @@ public class TexturePack {
     public TexturePack(String basePath) {
         String path;
         URL res;
+        Toolkit defToolkit = Toolkit.getDefaultToolkit();
+        BufferedImage swap;
         for (int i = 0; i < Texture.values().length; i++) {
             path = basePath + Texture.values()[i].getName();
+            /* Don't ask me why this next line is important. Just trust me.
+             * It has something to do with image observers, and without it
+             * a call to image.getWidth(null) fails. 
+             */
             images[i] = new ImageIcon(getClass().getResource(path));
             res = getClass().getResource(path);
-            imgs[i] = Toolkit.getDefaultToolkit().getImage(res);
+            imgs[i] = defToolkit.getImage(res);
+            swap = Util.toBufferedImage(imgs[i]);
+            pixels[i] = Util.imageToPixels(swap);
         }
     }
-    
+
     /**
-     * Convert a Texture enum into a ImageIcon.
+     * Convert a Texture enum into a Image.
      * @param t The Texture to source
-     * @return The ImageIcon to draw.
+     * @return The Image to draw.
      */
     public Image get(Texture t) {
         return imgs[t.ordinal()];
+    }
+    
+    /**
+     * Convert a Texture enum into a pixel array.
+     * @param t The Texture to source
+     * @return The pixel array to draw.
+     */
+    public double[][][] getP(Texture t) {
+        return pixels[t.ordinal()];
     }
 }

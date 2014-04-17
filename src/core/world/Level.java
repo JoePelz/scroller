@@ -1,19 +1,24 @@
 /** Joe Pelz, Set A, A00893517 */
 package core.world;
 
+import java.awt.Image;
 import java.awt.Point;
+import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.util.Scanner;
 
+import core.Drawable;
 import core.Texture;
-
+import core.TexturePack;
+import core.Util;
 
 /**
  * <p>This class merely stores data about a level. </p>
  * @author Joe Pelz, Set A, A00893517
  * @version 1.0
  */
-public class Level {
+public class Level implements Drawable{
     /** The directory levels are stored in. */
     private static final String BASE_PATH = "/levels/";
     /** The rows in this level. */
@@ -26,11 +31,22 @@ public class Level {
     private Point start = new Point(0, 2);
     /** Where the player should exit. */
     private Point exit = new Point(0, -1);
+    
+    /** The texture pack to draw from. Pun intended. */
+    private TexturePack tp;
+    /** The actual pixels of the rendering. */
+    private double pixels[][][];
+    /** The region the pixels cover. */
+    private Rectangle bounds;
+    /** The draw type for this element. */
+    private short drawType = 0;
+    
     /**
      * Constructor to initialize a level from a file.
      * @param path The name of the file to populate the level from
      */
-    public Level(String path) {
+    public Level(String path, TexturePack tPack) {
+        tp = tPack;
         //Open the file for reading
         InputStream in = getClass().getResourceAsStream(BASE_PATH + path);
         Scanner scan = new Scanner(in);
@@ -38,6 +54,7 @@ public class Level {
         //Set the array size
         cols = scan.nextInt();
         rows = scan.nextInt();
+        pixels = new double[cols*30][rows*30][Util.CHANNELS];
         map = new Texture[cols][rows];
         char[][] cMap = new char[cols][rows];
         char c = '0';
@@ -61,33 +78,26 @@ public class Level {
         scan.close();
         
         init(cMap);
+        updatePixels();
     }
-    
-    /**
-     * Constructor to initialize a level from a file.
-     * @param tx The data to gen the level from.
-     */
-    public Level(Texture[][] tx) {
-        //Set the array size
-        cols = tx.length;
-        rows = tx[0].length;
-        map = new Texture[cols][rows];
 
-        init(tx);
-    }
-    
     /**
      * Constructor to initialize a level of a particular with bg blocks.
      * @param rows How tall the level is
      * @param cols How wide the level is
      */
-    public Level(int cols, int rows) {
+    public Level(int cols, int rows, TexturePack tPack) {
+        tp = tPack;
+        pixels = new double[cols*30][rows*30][Util.CHANNELS];
+        
         this.cols = cols;
         this.rows = rows;
         map = new Texture[cols][rows];
         initEmpty();
         final int defaultStart = 10;
         start = new Point(0, defaultStart);
+        
+        updatePixels();
     }
     
     /**
@@ -97,23 +107,6 @@ public class Level {
         for (int col = 0; col < cols; col++) {
             for (int row = 0; row < rows; row++) {
                 map[col][row] = Texture.bg;
-            }
-        }
-    }
-    
-    /**
-     * Initialize a level from an array.
-     * @param data An array representing the blocks to make the world from.
-     */
-    private void init(Texture[][] data) {
-        if (data.length != map.length || data[0].length != map[0].length) {
-            throw new IllegalArgumentException("data array "
-                    + "does not match level size!");
-        }
-        
-        for (int col = 0; col < cols; col++) {
-            for (int row = 0; row < rows; row++) {
-                map[col][row] = data[col][row];
             }
         }
     }
@@ -145,7 +138,7 @@ public class Level {
         case '-':
             return Texture.bg;
         case 'i':
-            return Texture.bgLight;
+            return Texture.bgLightDead;
         case '#':
             return Texture.brick;
         default:
@@ -197,6 +190,7 @@ public class Level {
                     + "), (0:" + cols + ".");
         }
         map[col][row] = tx;
+        updatePixels(col, row);
     }
     
     /**
@@ -247,5 +241,77 @@ public class Level {
      */
     public Point getExit() {
         return exit;
+    }
+
+    private void updatePixelsOld() {
+        int z = 30; //block size. 
+        Image ibrush;
+        BufferedImage brush;
+        double[][][] iPixels;
+        
+        //for every block in the world,
+        for (int col = 0; col < cols; col++) {
+            for (int row = 0; row < rows; row++) {
+                //get the pixels for that texture
+                ibrush = tp.get(map[col][row]);
+                brush = Util.toBufferedImage(ibrush);
+                iPixels = Util.imageToPixels(brush);
+                //paste them into the instance data pixels[][][];        
+                for (int x = col * z; x < col * z + z; x++) {
+                    for (int y = row * z; y < row * z + z; y++) {
+                        pixels[x][y] = iPixels[x - (col * z)][(y - (row * z))];
+                    }
+                }
+            }
+        }
+    }
+    private void updatePixels() {
+        int z = 30; //block size. 
+        double[][][] iPixels;
+        
+        //for every block in the world,
+        for (int col = 0; col < cols; col++) {
+            for (int row = 0; row < rows; row++) {
+                //get the pixels for that texture
+                iPixels = tp.getP(map[col][row]);
+                //paste them into the instance data pixels[][][];        
+                for (int x = col * z; x < col * z + z; x++) {
+                    for (int y = row * z; y < row * z + z; y++) {
+                        pixels[x][y] = iPixels[x - (col * z)][(y - (row * z))];
+                    }
+                }
+            }
+        }
+    }
+    
+    private void updatePixels(int col, int row) {
+        int z = 30; //block size. 
+        double[][][] iPixels;
+
+        //get the pixels for that texture
+        iPixels = tp.getP(map[col][row]);
+        //paste them into the instance data pixels[][][];        
+        for (int x = col * z; x < col * z + z; x++) {
+            for (int y = row * z; y < row * z + z; y++) {
+                pixels[x][y] = iPixels[x - (col * z)][(y - (row * z))];
+            }
+        }
+    }
+    
+    @Override
+    public double[][][] getPixels() {
+//        System.out.println("at 15,30: R=" + pixels[15][30][Util.R] + ", G=" + pixels[15][30][Util.G] + ", B=" + pixels[15][30][Util.B]);
+        return pixels;
+    }
+
+    @Override
+    public Rectangle getBounds() {
+        bounds = new Rectangle(0, 0, cols * 30, rows * 30);
+        return bounds;
+    }
+
+    @Override
+    public short getDrawType() {
+        return drawType;
     }
 }

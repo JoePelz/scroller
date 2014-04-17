@@ -4,7 +4,6 @@ package core.world;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Point;
-import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.awt.image.ColorModel;
 import java.awt.image.WritableRaster;
@@ -61,11 +60,16 @@ public class World {
      */
     public World(int width, int height, TexturePack texPack) {
         tp = texPack;
-
-//        world = RandomLevel.genWorldRandom(WORLD_WIDTH, WORLD_HEIGHT);
-//        world = RandomLevel.genWorldHills(WORLD_WIDTH, WORLD_HEIGHT);
-//        world = RandomLevel.genWorldPlatform(WORLD_WIDTH, WORLD_HEIGHT);
-        world = new Level("house.txt");
+        
+        double temp = Math.random();
+        if (temp < 0.3) {
+            world = RandomLevel.genWorldRandom(WORLD_WIDTH, WORLD_HEIGHT, texPack);
+        } else if (temp < 0.6) {
+            world = RandomLevel.genWorldHills(WORLD_WIDTH, WORLD_HEIGHT, texPack);
+        } else {
+            world = RandomLevel.genWorldPlatform(WORLD_WIDTH, WORLD_HEIGHT, texPack);
+        }
+//        world = new Level("house.txt", texPack);
         
         start = world.getStart();
         start = new Point(start.x * CELL_SIZE, start.y * CELL_SIZE);
@@ -313,14 +317,14 @@ public class World {
         y = y + comp.getHeight() - WORLD_HEIGHT * CELL_SIZE;
 
         //Draw the infinite background
-        int h;
-        int v = offsetY % CELL_SIZE + comp.getHeight();
-        for (; v > -background.getHeight(); v -= background.getHeight()) {
-            h = -(offsetX % CELL_SIZE) - CELL_SIZE;
-            for (; h < comp.getWidth(); h += background.getWidth()) {
-                page.drawImage(background, h, v, null);
-            }
-        }
+//        int h;
+//        int v = offsetY % CELL_SIZE + comp.getHeight();
+//        for (; v > -background.getHeight(); v -= background.getHeight()) {
+//            h = -(offsetX % CELL_SIZE) - CELL_SIZE;
+//            for (; h < comp.getWidth(); h += background.getWidth()) {
+//                page.drawImage(background, h, v, null);
+//            }
+//        }
         
         //Draw the important tiles into place.
         page.drawImage(fincomp, x, y, null);
@@ -354,5 +358,9 @@ public class World {
     }
     public int getHeightPixels() {
         return WORLD_HEIGHT * CELL_SIZE;
+    }
+    public Level getLevel() {
+//        System.out.println(world);
+        return world;
     }
 }
