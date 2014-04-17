@@ -13,7 +13,6 @@ import javax.swing.JPanel;
 
 import core.creatures.Hero;
 import core.effects.Burst;
-import core.props.Filter;
 import core.props.Light;
 import core.world.Level;
 import core.world.RandomLevel;
@@ -72,7 +71,7 @@ public class Engine extends JPanel implements Runnable {
     /** The rendering engine. */
     private Renderer renderer = new Renderer();
     /** The actual world to explore. */
-    private World world;
+    private Level world;
     /** The camera's x position. */
     private int offX;
     /** The camera's y position. */
@@ -85,8 +84,6 @@ public class Engine extends JPanel implements Runnable {
     private TexturePack tp = new TexturePack("/images/");
     /** The special effects used. */
     private ArrayList<Entity> effects = new ArrayList<Entity>();
-    /** The lights in use. */
-    private ArrayList<Filter> filters = new ArrayList<Filter>();
     /** The triggerable events in use. */
     private ArrayList<Trigger> triggers = new ArrayList<Trigger>();
     
@@ -101,7 +98,8 @@ public class Engine extends JPanel implements Runnable {
         setFocusable(true);
         
         //init world
-        world = new World(WIDTH, HEIGHT, tp);
+//        world = RandomLevel.genWorldHills(150, 15, tp);
+        world = RandomLevel.genWorldPlatform(150, 15, tp);
 
         //init hero
         hero = new Hero();
@@ -109,17 +107,16 @@ public class Engine extends JPanel implements Runnable {
         hero.setPos(world.getStart());
 
         
-        renderer.setWorld(world.getLevel());
+        renderer.setWorld(world);
         
         //init test light
         Point[] bgLights = world.getAll(Texture.bgLightDead);
         Light tempLight;
         for (Point light : bgLights) {
-            tempLight = new Light(light.x * 30 + 15, light.y * 30 + 15, world);
+            tempLight = new Light(light.x + 15, light.y + 15, world);
             renderer.addProp(tempLight);
             triggers.add(tempLight);
         }
-//        artist.addProp(new Light(210, 60, world));
 
         //Don't start this loop until setup is complete! 
         if (thread == null) {

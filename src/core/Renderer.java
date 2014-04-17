@@ -7,7 +7,6 @@ import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 
-import core.props.Light;
 import core.world.Level;
 
 /**

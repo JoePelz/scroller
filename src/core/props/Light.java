@@ -3,21 +3,19 @@ package core.props;
 
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
-import java.awt.image.WritableRaster;
 
 import core.Drawable;
 import core.Texture;
 import core.Trigger;
 import core.Util;
-import core.world.World;
+import core.world.Level;
 
 /**
  * <p>Represents a light in the world, at a particular position.</p>
  * @author Joe Pelz, Set A, A00893517
  * @version 1.0
  */
-public class Light implements Filter, Trigger, Drawable {
+public class Light implements Trigger, Drawable {
     /** Bit-shift value for red in integer colors. */
     private static final byte R_SHIFT = 16;
     /** Bit-shift value for green in integer colors. */
@@ -48,7 +46,7 @@ public class Light implements Filter, Trigger, Drawable {
     /** The light radius, default 100. */
     private short lightRadius = 100;
     /** Handle to world, for manipulating. */
-    private World worldHandle;
+    private Level hLevel;
     /** The next time it is safe to trigger the light. */
     private long timeSafe = 0;
     
@@ -57,13 +55,13 @@ public class Light implements Filter, Trigger, Drawable {
      * @param x X position in world pixels.
      * @param y Y position in world pixels.
      */
-    public Light(int x, int y, World world) {
+    public Light(int x, int y, Level handle) {
+        hLevel = handle;
         pos = new Point(x, y);
         isActive = true;
         isOn = false;
-        this.worldHandle = world;
-        wpos = new Point(x / World.CELL_SIZE, y / World.CELL_SIZE);
-        updateBounds(world);
+        wpos = new Point(x / Level.CELL_SIZE, y / Level.CELL_SIZE);
+        updateBounds();
         pixels = new double[bounds.width][bounds.height][Util.CHANNELS];
         updatePixels();
     }
@@ -72,7 +70,7 @@ public class Light implements Filter, Trigger, Drawable {
      * Calculates the bounds of the light's influence
      * @param world The world to clamp the light's influence by
      */
-    private void updateBounds(World world) {
+    private void updateBounds() {
         bounds = new Rectangle(
                 pos.x - lightRadius, 
                 pos.y - lightRadius, 
@@ -143,17 +141,6 @@ public class Light implements Filter, Trigger, Drawable {
         return Math.sqrt(x1 * x1 + y1 * y1);
     }
 
-    @Override
-    public void filter(BufferedImage source, BufferedImage destination) {
-        return;
-    }
-
-    @Override
-    public boolean isInRange(Rectangle r) {
-        return true;
-    }
-
-    @Override
     public boolean isActive() {
         return isActive;
     }
@@ -176,11 +163,11 @@ public class Light implements Filter, Trigger, Drawable {
         if (isOn) {
             isOn = false;
             //set world brick dark
-            worldHandle.setCell(wpos.x, wpos.y, Texture.bgLightDead);
+            hLevel.setCell(wpos.x, wpos.y, Texture.bgLightDead);
         } else {
             isOn = true;
             //set world brick light
-            worldHandle.setCell(wpos.x, wpos.y, Texture.bgLight);
+            hLevel.setCell(wpos.x, wpos.y, Texture.bgLight);
         }
         //filter the world
         updatePixels();

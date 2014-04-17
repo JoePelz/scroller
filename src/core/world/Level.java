@@ -1,14 +1,13 @@
 /** Joe Pelz, Set A, A00893517 */
 package core.world;
 
-import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
-import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.util.Scanner;
 
 import core.Drawable;
+import core.Dynamic;
 import core.Texture;
 import core.TexturePack;
 import core.Util;
@@ -19,11 +18,13 @@ import core.Util;
  * @version 1.0
  */
 public class Level implements Drawable{
+    /** the size of the tiles used. */
+    public static final int CELL_SIZE = 30;
     /** The directory levels are stored in. */
     private static final String BASE_PATH = "/levels/";
-    /** The rows in this level. */
+    /** The rows (tiles, not pixels) in this level. */
     private final int rows;
-    /** The cols in this level. */
+    /** The cols (tiles, not pixels) in this level. */
     private final int cols;
     /** The array that holds level data. */
     private Texture[][] map;
@@ -54,7 +55,7 @@ public class Level implements Drawable{
         //Set the array size
         cols = scan.nextInt();
         rows = scan.nextInt();
-        pixels = new double[cols*30][rows*30][Util.CHANNELS];
+        pixels = new double[cols*CELL_SIZE][rows*CELL_SIZE][Util.CHANNELS];
         map = new Texture[cols][rows];
         char[][] cMap = new char[cols][rows];
         char c = '0';
@@ -88,13 +89,13 @@ public class Level implements Drawable{
      */
     public Level(int cols, int rows, TexturePack tPack) {
         tp = tPack;
-        pixels = new double[cols*30][rows*30][Util.CHANNELS];
+        pixels = new double[cols*CELL_SIZE][rows*CELL_SIZE][Util.CHANNELS];
         
         this.cols = cols;
         this.rows = rows;
         map = new Texture[cols][rows];
         initEmpty();
-        final int defaultStart = 10;
+        final int defaultStart = rows * CELL_SIZE;
         start = new Point(0, defaultStart);
         
         updatePixels();
@@ -243,30 +244,65 @@ public class Level implements Drawable{
         return exit;
     }
 
-    private void updatePixelsOld() {
-        int z = 30; //block size. 
-        Image ibrush;
-        BufferedImage brush;
-        double[][][] iPixels;
+    /**
+     * Gets all the bricks that match the given texture.
+     * @param tx the texture to match
+     * @return An array of matching locations.
+     */
+    public Point[] getAll(Texture tx) {
+        //how much to increment the array by each time.
+        final int increment = 20;
+        //make array size 0
+        Point[] result = new Point[0];
+        Point[] temp;
+        int row = 0;
+        int col = 0;
+        byte lightCount = 0;
         
-        //for every block in the world,
-        for (int col = 0; col < cols; col++) {
-            for (int row = 0; row < rows; row++) {
-                //get the pixels for that texture
-                ibrush = tp.get(map[col][row]);
-                brush = Util.toBufferedImage(ibrush);
-                iPixels = Util.imageToPixels(brush);
-                //paste them into the instance data pixels[][][];        
-                for (int x = col * z; x < col * z + z; x++) {
-                    for (int y = row * z; y < row * z + z; y++) {
-                        pixels[x][y] = iPixels[x - (col * z)][(y - (row * z))];
+        //while iteration is incomplete
+        while (col < cols && row < rows) {
+            
+            //if out of space, resize the array
+            if (lightCount == result.length) {
+                temp = new Point[result.length + increment];
+                for (int i = 0; i < temp.length; i++) {
+                    if (i < result.length) {
+                        temp[i] = result[i];
                     }
                 }
+                result = temp;
             }
+            
+            //Advance through the array
+            row++;
+            if (row >= rows) {
+                row = 0;
+                col++;
+            }
+            
+            //add to array if matching
+            if (getCell(col, row) == tx) {
+                result[lightCount] = new Point(col * CELL_SIZE, row * CELL_SIZE);
+                lightCount++;
+            }
+        
         }
+        
+        //crop array to minimum size
+        temp = result;
+        result = new Point[lightCount];
+        for (int i = 0; i < lightCount; i++) {
+            result[i] = temp[i];
+        }
+        
+        //return result
+        return result;
     }
-    private void updatePixels() {
-        int z = 30; //block size. 
+    
+    /**
+     * Update the entire pixel array for the level.
+     */
+    private void updatePixels() { 
         double[][][] iPixels;
         
         //for every block in the world,
@@ -275,25 +311,29 @@ public class Level implements Drawable{
                 //get the pixels for that texture
                 iPixels = tp.getP(map[col][row]);
                 //paste them into the instance data pixels[][][];        
-                for (int x = col * z; x < col * z + z; x++) {
-                    for (int y = row * z; y < row * z + z; y++) {
-                        pixels[x][y] = iPixels[x - (col * z)][(y - (row * z))];
+                for (int x = col * CELL_SIZE; x < col * CELL_SIZE + CELL_SIZE; x++) {
+                    for (int y = row * CELL_SIZE; y < row * CELL_SIZE + CELL_SIZE; y++) {
+                        pixels[x][y] = iPixels[x - (col * CELL_SIZE)][(y - (row * CELL_SIZE))];
                     }
                 }
             }
         }
     }
     
+    /**
+     * update a specific tile of the level's pixel array.
+     * @param col the tile column to update.
+     * @param row the tile row to update.
+     */
     private void updatePixels(int col, int row) {
-        int z = 30; //block size. 
         double[][][] iPixels;
 
         //get the pixels for that texture
         iPixels = tp.getP(map[col][row]);
         //paste them into the instance data pixels[][][];        
-        for (int x = col * z; x < col * z + z; x++) {
-            for (int y = row * z; y < row * z + z; y++) {
-                pixels[x][y] = iPixels[x - (col * z)][(y - (row * z))];
+        for (int x = col * CELL_SIZE; x < col * CELL_SIZE + CELL_SIZE; x++) {
+            for (int y = row * CELL_SIZE; y < row * CELL_SIZE + CELL_SIZE; y++) {
+                pixels[x][y] = iPixels[x - (col * CELL_SIZE)][(y - (row * CELL_SIZE))];
             }
         }
     }
@@ -306,12 +346,67 @@ public class Level implements Drawable{
 
     @Override
     public Rectangle getBounds() {
-        bounds = new Rectangle(0, 0, cols * 30, rows * 30);
+        bounds = new Rectangle(0, 0, cols * CELL_SIZE, rows * CELL_SIZE);
         return bounds;
     }
 
     @Override
     public short getDrawType() {
         return drawType;
+    }
+
+    /**
+     * Calculate the x-axis movement required for the given object to not 
+     * overlap with the given block coordinate. 
+     * @param obj The entity that has collided
+     * @param velocity The motion of the entity (for reversal. Unused yet.)
+     * @param impactZone The block that has been collided with.
+     * @return The distance to move to no longer be colliding.
+     */
+    public int escapeX(Dynamic obj, double velocity, Point impactZone) {
+        Point pos = obj.getPos();
+        int escape = 0; 
+        //if the obj was moving right nudge it left into safety.
+        if (velocity > 0) {
+            escape = (impactZone.x * CELL_SIZE - obj.getSize().width) - pos.x;
+            
+        //but if the obj was moving left nudge it right into safety.
+        } else if (velocity < 0) {
+            escape = CELL_SIZE - (pos.x % CELL_SIZE);
+        }
+
+        //Clamp the velocity;
+        if (Math.abs(escape) > Math.abs(velocity)) {
+            escape = 0;
+        }
+        return escape;
+    }
+
+    /**
+     * Calculate the y-axis movement required for the given object to not 
+     * overlap with the given block coordinate. 
+     * @param obj The entity that has collided
+     * @param velocity The motion of the entity (for reversal. Unused yet.)
+     * @param impactZone The block that has been collided with.
+     * @return The distance to move to no longer be colliding.
+     */
+    public int escapeY(Dynamic obj, double velocity, Point impactZone) {
+        Point pos = obj.getPos();
+        int escape = 0; 
+
+        //if the obj was moving up nudge it down into safety.
+        if (velocity > 0) {
+            escape = (impactZone.y * CELL_SIZE - obj.getSize().height) - pos.y;
+            
+        //but if the obj was moving down nudge it up into safety.
+        } else if (velocity < 0) {
+            escape = CELL_SIZE - (pos.y % CELL_SIZE);
+        }
+        
+        //Clamp the velocity;
+        if (Math.abs(escape) > Math.abs(velocity)) {
+            escape = 0;
+        }
+        return escape;
     }
 }

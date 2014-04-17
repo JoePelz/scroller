@@ -53,7 +53,7 @@ public class RandomLevel {
             }
         }
 
-        level.setStart(new Point(0, rows));
+        level.setStart(new Point(0, rows * Level.CELL_SIZE));
         return level;
     }
 
@@ -123,7 +123,7 @@ public class RandomLevel {
 
         //ensure the player starts on a brick.
         level.setCell(0, 0, Texture.brick);
-        level.setStart(new Point(0, rows));
+        level.setStart(new Point(0, 2 * Level.CELL_SIZE));
         return level;
     }
 
@@ -191,7 +191,7 @@ public class RandomLevel {
                 level.setCell(col, litEl, Texture.bgLightDead);
             }
         }
-        level.setStart(new Point(0, rows));
+        level.setStart(new Point(0, 2 * Level.CELL_SIZE));
         return level;
     }
 
@@ -202,8 +202,8 @@ public class RandomLevel {
      * @param tp The texture pack to use as source.
      */
     public static void genWorldFragments(int cols, int rows, TexturePack tp) {
-        Level testLev = new Level(cols, rows, tp);
+        //Level testLev = new Level(cols, rows, tp);
 
-        Level testLev3 = new Level("fragments.txt", tp);
+        //Level testLev3 = new Level("fragments.txt", tp);
     }
 }

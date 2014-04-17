@@ -5,6 +5,7 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
+import java.awt.image.WritableRaster;
 
 /**
  * <p></p>
@@ -27,14 +28,13 @@ public class Util {
      * @param image The image to convert to pixels
      * @return An array of pixels [width][height][r/g/b/a]
      */
-    public static double[][][] imageToPixels(BufferedImage image) {
+    public static double[][][] imageToPixels(BufferedImage image, double[][][] result) {
 
         final byte[] pixels = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
         final int width = image.getWidth();
         final int height = image.getHeight();
         final boolean hasAlphaChannel = image.getAlphaRaster() != null;
 
-        double[][][] result = new double[height][width][CHANNELS];
         if (hasAlphaChannel) {
             final int pixelLength = 4;
             for (int pixel = 0, row = height - 1, col = 0; 
@@ -70,6 +70,22 @@ public class Util {
         return result;
     }
     
+    public static void pixelsToImage(double[][][] pixels, BufferedImage image) {
+        WritableRaster r = image.getRaster();
+        
+        /* the double array is a 1-dimensional array that lists 
+         * r, g, b, a, r, g, b, a, for each row (or column?) in sequence.
+         */
+        //r.setPixels(x, y, w, h, dArray);
+        
+        image.setData(r);
+    }
+    
+    /**
+     * Convert an Image into a BufferedImage, so that it's editable.
+     * @param img the image to convert
+     * @return the image as a BufferedImage
+     */
     public static BufferedImage toBufferedImage(Image img)
     {
         if (img instanceof BufferedImage)

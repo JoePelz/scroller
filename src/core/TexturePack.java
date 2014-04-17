@@ -42,7 +42,8 @@ public class TexturePack {
             res = getClass().getResource(path);
             imgs[i] = defToolkit.getImage(res);
             swap = Util.toBufferedImage(imgs[i]);
-            pixels[i] = Util.imageToPixels(swap);
+            pixels[i] = new double[imgs[i].getWidth(null)][imgs[i].getHeight(null)][Util.CHANNELS];
+            Util.imageToPixels(swap, pixels[i]);
         }
     }
 
