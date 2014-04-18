@@ -41,6 +41,8 @@ public class Engine extends JPanel implements Runnable {
     private static final long NS_PER_S = 1000000000L;
     /** Nanoseconds per millisecond. */
     private static final int NS_PER_MS = 1000000;
+    /** Longest allowable time passage between frames. */
+    private static final int MAX_FRAME = 50000000;
     
     /** Score offset distance in pixels. (x direction) */
     private static final int SCORE_PLACE_X = 20;
@@ -98,22 +100,25 @@ public class Engine extends JPanel implements Runnable {
         setFocusable(true);
         
         //init world
-//        world = RandomLevel.genWorldHills(150, 15, tp);
-        world = RandomLevel.genWorldPlatform(150, 15, tp);
+        final int defWidth = 150;
+        final int defHeight = 15;
+//        world = RandomLevel.genWorldHills(defWidth, defHeight, tp);
+        world = RandomLevel.genWorldPlatform(defWidth, defHeight, tp);
 
         //init hero
         hero = new Hero();
         hero.setImage(tp.get(Texture.hero));
         hero.setPos(world.getStart());
-
+        System.out.println("Start location: " + world.getStart());
         
         renderer.setWorld(world);
         
         //init test light
         Point[] bgLights = world.getAll(Texture.bgLightDead);
         Light tempLight;
+        final int cso = 15; //Cell size offset.
         for (Point light : bgLights) {
-            tempLight = new Light(light.x + 15, light.y + 15, world);
+            tempLight = new Light(light.x + cso, light.y + cso, world);
             renderer.addProp(tempLight);
             triggers.add(tempLight);
         }
@@ -133,8 +138,6 @@ public class Engine extends JPanel implements Runnable {
     public void paintComponent(Graphics page) {
         super.paintComponent(page);
         setForeground(Color.cyan);
-        
-//        world.draw(page, this, offX, offY);
         
         renderer.draw(page, this, offX, offY);
         
@@ -401,6 +404,8 @@ public class Engine extends JPanel implements Runnable {
             //Timing
             //elapsed is the number of nanoseconds since last frame
             elapsed = System.nanoTime() - start;
+            elapsed = Math.min(MAX_FRAME, elapsed);
+//            elapsed = 40000000;
             start = System.nanoTime();
             Point pos = hero.getPos();
             frame++;
@@ -449,9 +454,10 @@ public class Engine extends JPanel implements Runnable {
 
     /**
      * Tests if the hero triggers world events, like by touching a light.
+     * @param trigs A list of triggers to test.
      */
-    private void testTriggers(ArrayList<Trigger> triggers) {
-        for (Trigger trigger : triggers) {
+    private void testTriggers(ArrayList<Trigger> trigs) {
+        for (Trigger trigger : trigs) {
             if (trigger.isTriggered(hero.getBounds())) {
                 trigger.triggerAction();
                 Entity burst = new Burst(tp);

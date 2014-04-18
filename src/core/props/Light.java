@@ -48,12 +48,13 @@ public class Light implements Trigger, Drawable {
     /** Handle to world, for manipulating. */
     private Level hLevel;
     /** The next time it is safe to trigger the light. */
-    private long timeSafe = 0;
+    private long timeSafe;
     
     /**
      * Constructor to create a new light at the given coordinates.
      * @param x X position in world pixels.
      * @param y Y position in world pixels.
+     * @param handle A connection to the level (for the trigger action).
      */
     public Light(int x, int y, Level handle) {
         hLevel = handle;
@@ -67,8 +68,7 @@ public class Light implements Trigger, Drawable {
     }
 
     /**
-     * Calculates the bounds of the light's influence
-     * @param world The world to clamp the light's influence by
+     * Calculates the bounds of the light's influence.
      */
     private void updateBounds() {
         bounds = new Rectangle(
@@ -108,6 +108,7 @@ public class Light implements Trigger, Drawable {
 
     /**
      * Get the light position.
+     * @return a reference to the light's position,
      */
     public Point getPos() {
         return pos;
@@ -123,7 +124,7 @@ public class Light implements Trigger, Drawable {
      * Check if the light is on or off.
      * @return true if the light is on.
      */
-    public boolean isOn(boolean on) {
+    public boolean isOn() {
         return isOn;
     }
     
@@ -141,17 +142,21 @@ public class Light implements Trigger, Drawable {
         return Math.sqrt(x1 * x1 + y1 * y1);
     }
 
+    /**
+     * Check if the light's trigger is active.
+     * @return true if the trigger is active.
+     */
     public boolean isActive() {
         return isActive;
     }
 
     @Override
-    public boolean isTriggered(Rectangle bounds) {
+    public boolean isTriggered(Rectangle bbox) {
         boolean result = (
-                   pos.x > bounds.x 
-                && pos.x < (bounds.x + bounds.width)
-                && pos.y > bounds.y
-                && pos.y < (bounds.y + bounds.height)
+                   pos.x > bbox.x 
+                && pos.x < (bbox.x + bbox.width)
+                && pos.y > bbox.y
+                && pos.y < (bbox.y + bbox.height)
                 && System.currentTimeMillis() > timeSafe);
         return result;
     }
@@ -174,28 +179,49 @@ public class Light implements Trigger, Drawable {
         
     }
 
+    /**
+     * Update the pixel array for the light.
+     */
     public void updatePixels() {
         //Center of light glow
-        int cX = lightRadius;
-        int cY = lightRadius;
+        double dR;
+        double dG;
+        double dB;
         double distance;
-        if(isOn) {
-            for (int x = 0; x < bounds.width; x++) {
-                for (int y = 0; y < bounds.height; y++) {
+        if (isOn) {
+            for (int x = 0, ix = bounds.width - 1; 
+                    x < lightRadius; 
+                    x++, ix--) {
+                for (int y = 0, iy = bounds.height - 1; 
+                        y < lightRadius; 
+                        y++, iy--) {
                     
                     //Get pixel distance from light source
-                    distance = getDistance(x, cX, y, cY);
+                    distance = getDistance(x, lightRadius, y, lightRadius);
                     /* Convert distance to 0:1 with 1 at the light 
                      * and 0 at the perimeter circle. Clamp negatives.*/
                     distance = Math.max(0, 1 - (distance / lightRadius));
-                    distance = Math.pow(distance, 3);
+                    distance = Math.pow(distance, 2);
                     
-                    //TODO: This should only need to calculate one quadrant
-                    //It would be identical in other quadrants.
-                    pixels[x][y][Util.R] = distance * r / 255.0;
-                    pixels[x][y][Util.G] = distance * g / 255.0;
-                    pixels[x][y][Util.B] = distance * b / 255.0;
+                    dR = distance * r / 255.0;
+                    dG = distance * g / 255.0;
+                    dB = distance * b / 255.0;
+                    pixels[x][y][Util.R] = dR;
+                    pixels[x][y][Util.G] = dG;
+                    pixels[x][y][Util.B] = dB;
                     pixels[x][y][Util.A] = 1.0;
+                    pixels[ix][y][Util.R] = dR;
+                    pixels[ix][y][Util.G] = dG;
+                    pixels[ix][y][Util.B] = dB;
+                    pixels[ix][y][Util.A] = 1.0;
+                    pixels[x][iy][Util.R] = dR;
+                    pixels[x][iy][Util.G] = dG;
+                    pixels[x][iy][Util.B] = dB;
+                    pixels[x][iy][Util.A] = 1.0;
+                    pixels[ix][iy][Util.R] = dR;
+                    pixels[ix][iy][Util.G] = dG;
+                    pixels[ix][iy][Util.B] = dB;
+                    pixels[ix][iy][Util.A] = 1.0;
                 }
             }
         } else {

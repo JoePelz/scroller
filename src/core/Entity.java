@@ -47,7 +47,9 @@ public class Entity {
      * @return the bounding rectangle of the entity.
      */
     public Rectangle getBounds() {
-        return new Rectangle(pos.x, pos.y, brush.getWidth(null), brush.getHeight(null));
+        return new Rectangle(pos.x, pos.y, 
+                brush.getWidth(null), 
+                brush.getHeight(null));
     }
     /**
      * Set an absolute position for the entity.

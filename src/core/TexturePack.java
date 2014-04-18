@@ -20,7 +20,7 @@ public class TexturePack {
     /** Stores the actual images. */
     private Image[] imgs = new Image[Texture.values().length];
     /** Stores the pixels of each image. */
-    private double[][][][] pixels = new double[Texture.values().length][0][0][0];
+    private double[][][][] pixels = new double[Texture.values().length][][][];
     
     /**
      * Constructor, that requires the user to supply a path to the images.
@@ -42,7 +42,9 @@ public class TexturePack {
             res = getClass().getResource(path);
             imgs[i] = defToolkit.getImage(res);
             swap = Util.toBufferedImage(imgs[i]);
-            pixels[i] = new double[imgs[i].getWidth(null)][imgs[i].getHeight(null)][Util.CHANNELS];
+            pixels[i] = new double[imgs[i].getWidth(null)]
+                                  [imgs[i].getHeight(null)]
+                                  [Util.CHANNELS];
             Util.imageToPixels(swap, pixels[i]);
         }
     }

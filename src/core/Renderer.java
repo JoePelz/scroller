@@ -10,20 +10,29 @@ import java.util.ArrayList;
 import core.world.Level;
 
 /**
- * <p></p>
+ * <p>This class handles rendering and translates pixel arrays 
+ * into images.</p>
  * @author Joe Pelz, Set A, A00893517
  * @version 1.0
  */
 public class Renderer {
+    /** The green offset in an integer color. */
     private static final byte G_OFF = 8;
+    /** The red offset in an integer color. */
     private static final byte R_OFF = 16;
+    /** The alpha offset in an integer color. */
     private static final byte A_OFF = 24;
     
+    /** 8-bit color channel maximum. */
+    private static final short MAX = 255;
+    
+    /** If stale = true, the image needs to be redrawn 
+     * (because something has changed). */
     private boolean stale = true;
     
     //store the background
 //    private Level background;
-    //store the level
+    /** Store the level. */
     private Level world;
     //store the hero
 //    private Hero hero;
@@ -31,14 +40,14 @@ public class Renderer {
     //private ArrayList<Creature> creatures;
     //store the props
     //private ArrayList<Prop> prop;
-    //store the lights
+    /** Store the lights and other static props. */
     private ArrayList<Drawable> props = new ArrayList<Drawable>();
     //store the effects
 //    private ArrayList<Effect> effects;
     
-    /**all static layers mixed. 0,0 is bottom left. */
+    /** All static layers mixed. 0,0 is bottom left. */
     private double[][][] precomp;
-    /** final output image. 0,0 is top left. */
+    /** Final output image. 0,0 is top left. */
     private BufferedImage finComp;
     /**
      * Constructor for an empty renderer.
@@ -46,26 +55,48 @@ public class Renderer {
     public Renderer() {
     }
 
+    /**
+     * Tells the renderer that it's image needs recalculating.
+     */
     public void invalidate() {
         stale = true;
     }
     
+    /**
+     * Tells the renderer that a region of the image needs recalculating.
+     * @param r The region that needs to be redrawn.
+     */
     public void invalidate(Rectangle r) {
         updateComp(r);
         updateImage(r);
     }
     
+    /**
+     * Give the renderer a world to base it's drawing around.
+     * @param w the world to draw (and draw on)
+     */
     public void setWorld(Level w) {
         world = w;
-        finComp = new BufferedImage(w.getBounds().width, w.getBounds().height, BufferedImage.TYPE_4BYTE_ABGR);
-        precomp = new double[w.getBounds().width][w.getBounds().height][Util.CHANNELS];
+        finComp = new BufferedImage(
+                w.getBounds().width, 
+                w.getBounds().height, 
+                BufferedImage.TYPE_4BYTE_ABGR);
+        precomp = new double[w.getBounds().width]
+                            [w.getBounds().height]
+                            [Util.CHANNELS];
         stale = true;
     }
+    /**
+     * Add a static prop to the world renderer.
+     * @param prop The prop to add to the world.
+     */
     public void addProp(Drawable prop) {
         props.add(prop);
-        stale = true;
     }
 
+    /**
+     * Update the final pixel array comp of the background.
+     */
     private void updateComp() {
 //        System.out.println("Updating everything.");
         double[][][] worldP = world.getPixels();
@@ -78,13 +109,17 @@ public class Renderer {
             }
         }
 
-        for(Drawable d : props) {
+        for (Drawable d : props) {
 //            System.out.println("adding light at " + ((Light) d).getPos());
             add(d.getPixels(), d.getBounds());
         }
         stale = false;
     }
     
+    /**
+     * Update a specific region in the final pixel comp.
+     * @param bounds The region to update.
+     */
     private void updateComp(Rectangle bounds) {
 //        System.out.println("Updating region.");
         double[][][] worldP = world.getPixels();
@@ -102,38 +137,56 @@ public class Renderer {
             }
         }
         
-        for(Drawable d : props) {
+        for (Drawable d : props) {
 //            System.out.println("adding light at " + ((Light) d).getPos());
             add(d.getPixels(), d.getBounds(), bounds);
         }
         stale = false;
     }
 
-    private void add(double[][][] pixels, Rectangle region) {
+    /**
+     * Merge a layer into the background by adding it. 
+     * @param pixels The pixel array to merge
+     * @param bound The global coordinates of those pixels.
+     */
+    private void add(double[][][] pixels, Rectangle bound) {
         Rectangle worldBounds = world.getBounds();
-        int left   = Math.max(region.x, worldBounds.x);
-        int bottom = Math.max(region.y, worldBounds.y);
-        int right  = (Math.min(region.x + region.width,  worldBounds.x + worldBounds.width));
-        int top    = (Math.min(region.y + region.height, worldBounds.y + worldBounds.height));
-//        System.out.println("Bounds: Left=" + left + ", Right=" + right + ", Top=" + top + ", Bottom=" + bottom);
-//        System.out.println("World Bounds: Left=" + worldBounds.x
-//                + ", Right=" + (worldBounds.x + worldBounds.width)
-//                + ", Top=" + (worldBounds.y + worldBounds.height)
-//                + ", Bottom=" + worldBounds.y);
+        int left   = Math.max(bound.x, worldBounds.x);
+        int bottom = Math.max(bound.y, worldBounds.y);
+        int right  = (Math.min(bound.x + bound.width,  
+                               worldBounds.x + worldBounds.width));
+        int top    = (Math.min(bound.y + bound.height, 
+                               worldBounds.y + worldBounds.height));
         for (int x = left; x < right; x++) {
             for (int y = bottom; y < top; y++) {
-                precomp[x][y][Util.R] += pixels[x - region.x][y - region.y][Util.R];
-                precomp[x][y][Util.G] += pixels[x - region.x][y - region.y][Util.G];
-                precomp[x][y][Util.B] += pixels[x - region.x][y - region.y][Util.B];
+                precomp[x][y][Util.R] += pixels[x - bound.x]
+                                               [y - bound.y]
+                                               [Util.R];
+                precomp[x][y][Util.G] += pixels[x - bound.x]
+                                               [y - bound.y]
+                                               [Util.G];
+                precomp[x][y][Util.B] += pixels[x - bound.x]
+                                               [y - bound.y]
+                                               [Util.B];
             }
         }
     }
-    private void add(double[][][] pixels, Rectangle bounds, Rectangle region) {
+    
+    /**
+     * Merge a layer into the background by adding it, 
+     * but only over a specific region. 
+     * @param pixels The pixel array to merge
+     * @param bound  The global coordinates of those pixels.
+     * @param region The specific region to exclusively draw on. 
+     */
+    private void add(double[][][] pixels, Rectangle bound, Rectangle region) {
         Rectangle worldBounds = world.getBounds();
-        int left   = Math.max(bounds.x, worldBounds.x);
-        int bottom = Math.max(bounds.y, worldBounds.y);
-        int right  = (Math.min(bounds.x + bounds.width,  worldBounds.x + worldBounds.width));
-        int top    = (Math.min(bounds.y + bounds.height, worldBounds.y + worldBounds.height));
+        int left   = Math.max(bound.x, worldBounds.x);
+        int bottom = Math.max(bound.y, worldBounds.y);
+        int right  = (Math.min(bound.x + bound.width,  
+                               worldBounds.x + worldBounds.width));
+        int top    = (Math.min(bound.y + bound.height,
+                               worldBounds.y + worldBounds.height));
 
         //only update the relevant region
         left   = Math.max(left,   region.x);
@@ -143,9 +196,15 @@ public class Renderer {
         
         for (int x = left; x < right; x++) {
             for (int y = bottom; y < top; y++) {
-                precomp[x][y][Util.R] += pixels[x - bounds.x][y - bounds.y][Util.R];
-                precomp[x][y][Util.G] += pixels[x - bounds.x][y - bounds.y][Util.G];
-                precomp[x][y][Util.B] += pixels[x - bounds.x][y - bounds.y][Util.B];
+                precomp[x][y][Util.R] += pixels[x - bound.x]
+                                               [y - bound.y]
+                                               [Util.R];
+                precomp[x][y][Util.G] += pixels[x - bound.x]
+                                               [y - bound.y]
+                                               [Util.G];
+                precomp[x][y][Util.B] += pixels[x - bound.x]
+                                               [y - bound.y]
+                                               [Util.B];
             }
         }
     }
@@ -157,20 +216,20 @@ public class Renderer {
      */
     private int toIntColor(double[] argb) {
         
-        int channel = (int) (argb[Util.B] * 255);
-        channel = Math.max(0, Math.min(channel, 255));
+        int channel = (int) (argb[Util.B] * MAX);
+        channel = Math.max(0, Math.min(channel, MAX));
         int color = channel;
         
-        channel = (int) (argb[Util.G] * 255);
-        channel = Math.max(0, Math.min(channel, 255));
+        channel = (int) (argb[Util.G] * MAX);
+        channel = Math.max(0, Math.min(channel, MAX));
         color += channel << G_OFF;
         
-        channel = (int) (argb[Util.R] * 255);
-        channel = Math.max(0, Math.min(channel, 255));
+        channel = (int) (argb[Util.R] * MAX);
+        channel = Math.max(0, Math.min(channel, MAX));
         color += channel << R_OFF;
         
-        channel = (int) (argb[Util.A] * 255);
-        channel = Math.max(0, Math.min(channel, 255));
+        channel = (int) (argb[Util.A] * MAX);
+        channel = Math.max(0, Math.min(channel, MAX));
         color += channel << A_OFF;
         
         return color;
@@ -193,10 +252,12 @@ public class Renderer {
         }
     }
     /**
-     * Transfer the final colors from the array to the buffered image.  
+     * Transfer the final colors from the pixel array to the buffered image,  
+     * but only update a specific subset rectangle.
      * This is the point where we switch coordinate systems.
      * Up until now 0,0 has been the bottom left, with +Y going up.
      * After this (in finComp) 0,0 will be the top left, with +Y going down.
+     * @param region The particular region of the image to update. 
      */
     private void updateImage(Rectangle region) {
         int left   = Math.max(0, region.x);

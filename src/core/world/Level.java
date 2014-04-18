@@ -17,7 +17,7 @@ import core.Util;
  * @author Joe Pelz, Set A, A00893517
  * @version 1.0
  */
-public class Level implements Drawable{
+public class Level implements Drawable {
     /** the size of the tiles used. */
     public static final int CELL_SIZE = 30;
     /** The directory levels are stored in. */
@@ -36,15 +36,16 @@ public class Level implements Drawable{
     /** The texture pack to draw from. Pun intended. */
     private TexturePack tp;
     /** The actual pixels of the rendering. */
-    private double pixels[][][];
+    private double[][][] pixels;
     /** The region the pixels cover. */
     private Rectangle bounds;
     /** The draw type for this element. */
-    private short drawType = 0;
+    private short drawType;
     
     /**
      * Constructor to initialize a level from a file.
-     * @param path The name of the file to populate the level from
+     * @param path The name of the file to populate the level from.
+     * @param tPack The texture pack to use.
      */
     public Level(String path, TexturePack tPack) {
         tp = tPack;
@@ -55,7 +56,7 @@ public class Level implements Drawable{
         //Set the array size
         cols = scan.nextInt();
         rows = scan.nextInt();
-        pixels = new double[cols*CELL_SIZE][rows*CELL_SIZE][Util.CHANNELS];
+        pixels = new double[cols * CELL_SIZE][rows * CELL_SIZE][Util.CHANNELS];
         map = new Texture[cols][rows];
         char[][] cMap = new char[cols][rows];
         char c = '0';
@@ -86,10 +87,11 @@ public class Level implements Drawable{
      * Constructor to initialize a level of a particular with bg blocks.
      * @param rows How tall the level is
      * @param cols How wide the level is
+     * @param tPack the TexturePack to use.
      */
     public Level(int cols, int rows, TexturePack tPack) {
         tp = tPack;
-        pixels = new double[cols*CELL_SIZE][rows*CELL_SIZE][Util.CHANNELS];
+        pixels = new double[cols * CELL_SIZE][rows * CELL_SIZE][Util.CHANNELS];
         
         this.cols = cols;
         this.rows = rows;
@@ -282,7 +284,8 @@ public class Level implements Drawable{
             
             //add to array if matching
             if (getCell(col, row) == tx) {
-                result[lightCount] = new Point(col * CELL_SIZE, row * CELL_SIZE);
+                result[lightCount] = new Point(col * CELL_SIZE, 
+                                               row * CELL_SIZE);
                 lightCount++;
             }
         
@@ -311,9 +314,14 @@ public class Level implements Drawable{
                 //get the pixels for that texture
                 iPixels = tp.getP(map[col][row]);
                 //paste them into the instance data pixels[][][];        
-                for (int x = col * CELL_SIZE; x < col * CELL_SIZE + CELL_SIZE; x++) {
-                    for (int y = row * CELL_SIZE; y < row * CELL_SIZE + CELL_SIZE; y++) {
-                        pixels[x][y] = iPixels[x - (col * CELL_SIZE)][(y - (row * CELL_SIZE))];
+                for (int x = col * CELL_SIZE; 
+                        x < col * CELL_SIZE + CELL_SIZE; 
+                        x++) {
+                    for (int y = row * CELL_SIZE; 
+                            y < row * CELL_SIZE + CELL_SIZE; 
+                            y++) {
+                        pixels[x][y] = iPixels[x - (col * CELL_SIZE)]
+                                              [(y - (row * CELL_SIZE))];
                     }
                 }
             }
@@ -331,16 +339,23 @@ public class Level implements Drawable{
         //get the pixels for that texture
         iPixels = tp.getP(map[col][row]);
         //paste them into the instance data pixels[][][];        
-        for (int x = col * CELL_SIZE; x < col * CELL_SIZE + CELL_SIZE; x++) {
-            for (int y = row * CELL_SIZE; y < row * CELL_SIZE + CELL_SIZE; y++) {
-                pixels[x][y] = iPixels[x - (col * CELL_SIZE)][(y - (row * CELL_SIZE))];
+        for (int x = col * CELL_SIZE; 
+                x < col * CELL_SIZE + CELL_SIZE; 
+                x++) {
+            for (int y = row * CELL_SIZE; 
+                    y < row * CELL_SIZE + CELL_SIZE; 
+                    y++) {
+                pixels[x][y] = iPixels[x - (col * CELL_SIZE)]
+                                      [(y - (row * CELL_SIZE))];
             }
         }
     }
     
     @Override
     public double[][][] getPixels() {
-//        System.out.println("at 15,30: R=" + pixels[15][30][Util.R] + ", G=" + pixels[15][30][Util.G] + ", B=" + pixels[15][30][Util.B]);
+//        System.out.println("at 15,30: R=" + pixels[15][30][Util.R] 
+//                                 + ", G=" + pixels[15][30][Util.G] 
+//                                 + ", B=" + pixels[15][30][Util.B]);
         return pixels;
     }
 
