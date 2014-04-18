@@ -11,7 +11,7 @@ add collectibles.
 
 make world generation more interesting
 	prebuilt sections?
-	random algorithms?
+	other random algorithms?
 
 add other block types:
 	color/texture changes
@@ -36,7 +36,3 @@ collision
 	handle active-active collisions?! (uh oh!)
 
 add scoring
-
-Add tinting to blocks around the lights (semi-transparent overlay?)
-
-Create light class that has a filter function that takes a source buffer and a destination buffer
