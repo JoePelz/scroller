@@ -175,63 +175,51 @@ public class Light implements Trigger, Drawable {
             hLevel.setCell(wpos.x, wpos.y, Texture.bgLight);
         }
         //filter the world
-        updatePixels();
-        
     }
 
     /**
      * Update the pixel array for the light.
      */
     public void updatePixels() {
+        pixels = new double[lightRadius << 1][lightRadius << 1][Util.CHANNELS];
         //Center of light glow
         double dR;
         double dG;
         double dB;
         double distance;
-        if (isOn) {
-            for (int x = 0, ix = bounds.width - 1; 
-                    x < lightRadius; 
-                    x++, ix--) {
-                for (int y = 0, iy = bounds.height - 1; 
-                        y < lightRadius; 
-                        y++, iy--) {
-                    
-                    //Get pixel distance from light source
-                    distance = getDistance(x, lightRadius, y, lightRadius);
-                    /* Convert distance to 0:1 with 1 at the light 
-                     * and 0 at the perimeter circle. Clamp negatives.*/
-                    distance = Math.max(0, 1 - (distance / lightRadius));
-                    distance = Math.pow(distance, 2);
-                    
-                    dR = distance * r / 255.0;
-                    dG = distance * g / 255.0;
-                    dB = distance * b / 255.0;
-                    pixels[x][y][Util.R] = dR;
-                    pixels[x][y][Util.G] = dG;
-                    pixels[x][y][Util.B] = dB;
-                    pixels[x][y][Util.A] = 1.0;
-                    pixels[ix][y][Util.R] = dR;
-                    pixels[ix][y][Util.G] = dG;
-                    pixels[ix][y][Util.B] = dB;
-                    pixels[ix][y][Util.A] = 1.0;
-                    pixels[x][iy][Util.R] = dR;
-                    pixels[x][iy][Util.G] = dG;
-                    pixels[x][iy][Util.B] = dB;
-                    pixels[x][iy][Util.A] = 1.0;
-                    pixels[ix][iy][Util.R] = dR;
-                    pixels[ix][iy][Util.G] = dG;
-                    pixels[ix][iy][Util.B] = dB;
-                    pixels[ix][iy][Util.A] = 1.0;
-                }
-            }
-        } else {
-            for (int x = 0; x < bounds.width; x++) {
-                for (int y = 0; y < bounds.height; y++) {
-                    pixels[x][y][Util.R] = 0.0;
-                    pixels[x][y][Util.G] = 0.0;
-                    pixels[x][y][Util.B] = 0.0;
-                    pixels[x][y][Util.A] = 0.0;
-                }
+        for (int x = 0, ix = bounds.width - 1; 
+                x < lightRadius; 
+                x++, ix--) {
+            for (int y = 0, iy = bounds.height - 1; 
+                    y < lightRadius; 
+                    y++, iy--) {
+                
+                //Get pixel distance from light source
+                distance = getDistance(x, lightRadius, y, lightRadius);
+                /* Convert distance to 0:1 with 1 at the light 
+                 * and 0 at the perimeter circle. Clamp negatives.*/
+                distance = Math.max(0, 1 - (distance / lightRadius));
+                distance = Math.pow(distance, 2);
+
+                dR = distance * r / 255.0;
+                dG = distance * g / 255.0;
+                dB = distance * b / 255.0;
+                pixels[x][y][Util.R] = dR;
+                pixels[x][y][Util.G] = dG;
+                pixels[x][y][Util.B] = dB;
+                pixels[x][y][Util.A] = 1.0;
+                pixels[ix][y][Util.R] = dR;
+                pixels[ix][y][Util.G] = dG;
+                pixels[ix][y][Util.B] = dB;
+                pixels[ix][y][Util.A] = 1.0;
+                pixels[x][iy][Util.R] = dR;
+                pixels[x][iy][Util.G] = dG;
+                pixels[x][iy][Util.B] = dB;
+                pixels[x][iy][Util.A] = 1.0;
+                pixels[ix][iy][Util.R] = dR;
+                pixels[ix][iy][Util.G] = dG;
+                pixels[ix][iy][Util.B] = dB;
+                pixels[ix][iy][Util.A] = 1.0;
             }
         }
     }
@@ -250,5 +238,10 @@ public class Light implements Trigger, Drawable {
     public short getDrawType() {
         // TODO Auto-generated method stub
         return 1;
+    }
+
+    @Override
+    public boolean isDrawn() {
+        return isOn;
     }
 }

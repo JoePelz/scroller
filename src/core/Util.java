@@ -3,8 +3,12 @@ package core;
 
 import java.awt.Graphics2D;
 import java.awt.Image;
+import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBuffer;
 import java.awt.image.DataBufferByte;
+import java.awt.image.Raster;
 import java.awt.image.WritableRaster;
 
 /**
@@ -24,8 +28,10 @@ public class Util {
     public static final byte R = 3;
     /** The number of channels to include. */
     public static final byte CHANNELS = 4;
-    /** The highest value to store in a byte. */
+    /** The size of a byte. */
     public static final short BYTE = 256;
+    /** The highest value to store in a byte. */
+    public static final short B_MAX = 255;
 
     /**
      * <p>Originally from <a href="http://stackoverflow.com/questions/6524196/
@@ -55,18 +61,18 @@ public class Util {
                     pixel += pixelLength) {
                 //must convert from signed byte (-128:127) to unsigned byte, 
                 //therefore add 256 to a negative value.
-                result[col][row][A] = ((pixels[pixel    ] >= 0) 
-                        ? pixels[pixel    ] 
-                        : pixels[pixel    ] + BYTE) / maxByte; // alpha
-                result[col][row][B] = ((pixels[pixel + 1] >= 0) 
-                        ? pixels[pixel + 1] 
-                        : pixels[pixel + 1] + BYTE) / maxByte; // blue
-                result[col][row][G] = ((pixels[pixel + 2] >= 0) 
-                        ? pixels[pixel + 2] 
-                        : pixels[pixel + 2] + BYTE) / maxByte; // green
-                result[col][row][R] = ((pixels[pixel + 3] >= 0) 
-                        ? pixels[pixel + 3] 
-                        : pixels[pixel + 3] + BYTE) / maxByte; // red
+                result[col][row][A] = ((pixels[pixel + A] >= 0) 
+                        ? pixels[pixel + A] 
+                        : pixels[pixel + A] + BYTE) / maxByte; // alpha
+                result[col][row][B] = ((pixels[pixel + B] >= 0) 
+                        ? pixels[pixel + B] 
+                        : pixels[pixel + B] + BYTE) / maxByte; // blue
+                result[col][row][G] = ((pixels[pixel + G] >= 0) 
+                        ? pixels[pixel + G] 
+                        : pixels[pixel + G] + BYTE) / maxByte; // green
+                result[col][row][R] = ((pixels[pixel + R] >= 0) 
+                        ? pixels[pixel + R] 
+                        : pixels[pixel + R] + BYTE) / maxByte; // red
                 col++;
                 if (col == width) {
                     col = 0;
@@ -101,19 +107,79 @@ public class Util {
     }
     
     /**
-     * Convert a pixel array to an image.
+     * Convert a pixel array to an image. This function assumes the array and image are compatible sizes...
      * @param pixels The pixels to convert.
      * @param image The image to receive the converted pixels.
      */
     public static void pixelsToImage(double[][][] pixels, BufferedImage image) {
-        WritableRaster r = image.getRaster();
-        //TODO: write body...
-        /* the double array is a 1-dimensional array that lists 
-         * r, g, b, a, r, g, b, a, for each row (or column?) in sequence.
-         */
-        //r.setPixels(x, y, w, h, dArray);
+        //boolean hasAlpha = image.getAlphaRaster() != null;
         
-        image.setData(r);
+        int row = pixels[0].length - 1; 
+        int col = 0; 
+        int cols = pixels.length;
+        int rows = pixels[0].length;
+        
+        int[] dbPacked = new int[cols * rows];
+        
+        for (int i = 0; i < dbPacked.length; i++) {
+            dbPacked[i] = toIntRGBA(pixels[col][row]);
+
+            col++;
+            if (col == cols) {
+                col = 0;
+                row--;
+            }
+        }
+        WritableRaster r2 = Raster.createPackedRaster(DataBuffer.TYPE_INT, pixels.length, pixels[0].length, 4, 8, null);
+        r2.setDataElements(0, 0, pixels.length, pixels[0].length, dbPacked);
+        
+        image.setData(r2);
+    }
+    
+    /**
+     * Convert a pixel array to an image. This function assumes the array and image are compatible sizes...
+     * @param pixels The pixels to convert.
+     * @param image The image to receive the converted pixels.
+     * @param region The region to update in the image.
+     */
+    public static void pixelsToImage(double[][][] pixels, BufferedImage image, Rectangle region) {
+        //boolean hasAlpha = image.getAlphaRaster() != null;
+        
+        //Identify the boundary of the box (cropped to the image)
+        int left   = Math.max(0, region.x);
+        int bottom = Math.max(0, region.y);
+        int right  = Math.min(image.getWidth(),  region.x + region.width);
+        int top    = Math.min(image.getHeight(), region.y + region.height);
+        
+        //Set width, height and starting position.
+        int width = right - left;
+        int height = top - bottom;
+        int x = left;
+        int y = top - 1; 
+        
+        int[] dbPacked = new int[width * height];
+        
+        for (int i = 0; i < dbPacked.length; i++) {
+            dbPacked[i] = toIntRGBA(pixels[x][y]);
+
+            x++;
+            if (x == right) { 
+                x = left;
+                y--;
+            }
+        }
+        
+        int rTop = image.getHeight() - top;
+        WritableRaster r2 = Raster.createPackedRaster(
+                DataBuffer.TYPE_INT, 
+                width, 
+                height, 
+                CHANNELS, 
+                8, 
+                new Point(left, rTop));
+        r2.setDataElements(left, rTop, width, height, dbPacked);
+        
+        image.setData(r2);
     }
     
     /**
@@ -138,5 +204,57 @@ public class Util {
 
         // Return the buffered image
         return bimage;
+    }
+
+    /**
+     * Convert a double[argb] to a single int color.
+     * @param argb the double[argb] that is storing a color
+     * @return A color-encoded integer.
+     */
+    public static int toIntRGBA(double[] argb) {
+        
+        int channel = (int) (argb[Util.A] * B_MAX);
+        channel = Math.max(0, Math.min(channel, B_MAX));
+        int color = channel << 0;
+        
+        channel = (int) (argb[Util.B] * B_MAX);
+        channel = Math.max(0, Math.min(channel, B_MAX));
+        color    += channel << 8;
+        
+        channel = (int) (argb[Util.G] * B_MAX);
+        channel = Math.max(0, Math.min(channel, B_MAX));
+        color    += channel << 16;
+        
+        channel = (int) (argb[Util.R] * B_MAX);
+        channel = Math.max(0, Math.min(channel, B_MAX));
+        color    += channel << 24;
+        
+        return color;
+    }
+
+    /**
+     * Convert a double[argb] to a single int color.
+     * @param argb the double[argb] that is storing a color
+     * @return A color-encoded integer.
+     */
+    public static int toIntARGB(double[] argb) {
+        
+        int channel = (int) (argb[Util.A] * B_MAX);
+        channel = Math.max(0, Math.min(channel, B_MAX));
+        int color = channel << 24;
+        
+        channel = (int) (argb[Util.B] * B_MAX);
+        channel = Math.max(0, Math.min(channel, B_MAX));
+        color    += channel << 0;
+        
+        channel = (int) (argb[Util.G] * B_MAX);
+        channel = Math.max(0, Math.min(channel, B_MAX));
+        color    += channel << 8;
+        
+        channel = (int) (argb[Util.R] * B_MAX);
+        channel = Math.max(0, Math.min(channel, B_MAX));
+        color    += channel << 16;
+        
+        return color;
     }
 }

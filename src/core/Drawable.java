@@ -32,4 +32,10 @@ public interface Drawable {
      * @return A draw type code.
      */
     short getDrawType();
+    
+    /**
+     * Check if the entity should be drawn to screen.
+     * @return true if the entity should be drawn.
+     */
+    boolean isDrawn();
 }

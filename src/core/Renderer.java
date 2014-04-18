@@ -68,7 +68,7 @@ public class Renderer {
      */
     public void invalidate(Rectangle r) {
         updateComp(r);
-        updateImage(r);
+        updateImage2(r);
     }
     
     /**
@@ -111,7 +111,9 @@ public class Renderer {
 
         for (Drawable d : props) {
 //            System.out.println("adding light at " + ((Light) d).getPos());
-            add(d.getPixels(), d.getBounds());
+            if (d.isDrawn()) {
+                add(d.getPixels(), d.getBounds());
+            }
         }
         stale = false;
     }
@@ -139,9 +141,10 @@ public class Renderer {
         
         for (Drawable d : props) {
 //            System.out.println("adding light at " + ((Light) d).getPos());
-            add(d.getPixels(), d.getBounds(), bounds);
+            if (d.isDrawn()) {
+                add(d.getPixels(), d.getBounds(), bounds);
+            }
         }
-        stale = false;
     }
 
     /**
@@ -209,33 +212,7 @@ public class Renderer {
         }
     }
     
-    /**
-     * Convert a double[argb] to a single int color.
-     * @param argb the double[argb] that is storing a color
-     * @return A color-encoded integer.
-     */
-    private int toIntColor(double[] argb) {
-        
-        int channel = (int) (argb[Util.B] * MAX);
-        channel = Math.max(0, Math.min(channel, MAX));
-        int color = channel;
-        
-        channel = (int) (argb[Util.G] * MAX);
-        channel = Math.max(0, Math.min(channel, MAX));
-        color += channel << G_OFF;
-        
-        channel = (int) (argb[Util.R] * MAX);
-        channel = Math.max(0, Math.min(channel, MAX));
-        color += channel << R_OFF;
-        
-        channel = (int) (argb[Util.A] * MAX);
-        channel = Math.max(0, Math.min(channel, MAX));
-        color += channel << A_OFF;
-        
-        return color;
-    }
-    
-    
+
     /**
      * Transfer the final colors from the array to the buffered image.  
      * This is the point where we switch coordinate systems.
@@ -243,14 +220,9 @@ public class Renderer {
      * After this (in finComp) 0,0 will be the top left, with +Y going down.
      */
     private void updateImage() {
-        for (int x = 0; x < precomp.length; x++) {
-            for (int y = 0; y < precomp[0].length; y++) {
-                finComp.setRGB(x, 
-                        precomp[0].length - 1 - y, 
-                        toIntColor(precomp[x][y]));
-            }
-        }
+        Util.pixelsToImage(precomp, finComp);
     }
+    
     /**
      * Transfer the final colors from the pixel array to the buffered image,  
      * but only update a specific subset rectangle.
@@ -259,19 +231,8 @@ public class Renderer {
      * After this (in finComp) 0,0 will be the top left, with +Y going down.
      * @param region The particular region of the image to update. 
      */
-    private void updateImage(Rectangle region) {
-        int left   = Math.max(0, region.x);
-        int bottom = Math.max(0, region.y);
-        int right  = Math.min(precomp.length,    region.x + region.width);
-        int top    = Math.min(precomp[0].length, region.y + region.height);
-        
-        for (int x = left; x < right; x++) {
-            for (int y = bottom; y < top; y++) {
-                finComp.setRGB(x, 
-                        precomp[0].length - 1 - y, 
-                        toIntColor(precomp[x][y]));
-            }
-        }
+    private void updateImage2(Rectangle region) {
+        Util.pixelsToImage(precomp, finComp, region);
     }
     
     /**

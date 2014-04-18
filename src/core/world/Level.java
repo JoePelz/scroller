@@ -70,7 +70,7 @@ public class Level implements Drawable {
                 c = line.charAt(col);
                 cMap[col][row] = c;
                 if (c == 'I') {
-                    start = new Point(col, row);
+                    start = new Point(col * CELL_SIZE, row * CELL_SIZE);
                 }
                 if (c == 'O') {
                     exit = new Point(col, row);
@@ -423,5 +423,11 @@ public class Level implements Drawable {
             escape = 0;
         }
         return escape;
+    }
+
+    @Override
+    public boolean isDrawn() {
+        //always draw the level.
+        return true;
     }
 }

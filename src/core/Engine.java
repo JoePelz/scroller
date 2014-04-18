@@ -103,13 +103,14 @@ public class Engine extends JPanel implements Runnable {
         final int defWidth = 150;
         final int defHeight = 15;
 //        world = RandomLevel.genWorldHills(defWidth, defHeight, tp);
-        world = RandomLevel.genWorldPlatform(defWidth, defHeight, tp);
+//        world = RandomLevel.genWorldPlatform(defWidth, defHeight, tp);
+//        world = RandomLevel.genWorldRandom(defWidth, defHeight, tp);
+        world = new Level("house.txt", tp);
 
         //init hero
         hero = new Hero();
         hero.setImage(tp.get(Texture.hero));
         hero.setPos(world.getStart());
-        System.out.println("Start location: " + world.getStart());
         
         renderer.setWorld(world);
         
@@ -405,7 +406,6 @@ public class Engine extends JPanel implements Runnable {
             //elapsed is the number of nanoseconds since last frame
             elapsed = System.nanoTime() - start;
             elapsed = Math.min(MAX_FRAME, elapsed);
-//            elapsed = 40000000;
             start = System.nanoTime();
             Point pos = hero.getPos();
             frame++;
@@ -463,6 +463,7 @@ public class Engine extends JPanel implements Runnable {
                 Entity burst = new Burst(tp);
                 burst.setPos(((Light) trigger).getPos());
                 effects.add(burst);
+                
                 if (trigger instanceof Drawable) {  
                     renderer.invalidate(((Drawable) trigger).getBounds());
                 }
