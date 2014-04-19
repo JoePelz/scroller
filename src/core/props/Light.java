@@ -110,7 +110,7 @@ public class Light implements Trigger, Drawable {
      * Set the light radius for the light.
      * @param radius The light range
      */
-    private void setRadius(short radius) {
+    public void setRadius(short radius) {
         lightRadius = radius;
         updateBounds();
         updatePixels();
