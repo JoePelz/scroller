@@ -1,13 +1,11 @@
 /** Joe Pelz, Set A, A00893517 */
 package core.creatures;
 
-import java.awt.Component;
 import java.awt.Dimension;
-import java.awt.Graphics;
 import java.awt.Rectangle;
 
-import core.Entity;
 import core.Dynamic;
+import core.Entity;
 import core.Vector2D;
 
 
@@ -81,24 +79,6 @@ public class Hero extends Entity implements Dynamic {
         return result;
     }
     
-    @Override
-    public void draw(Component comp, Graphics page, int offsetX, int offsetY) {
-        // Get the actual size, not the shrunken (overridden) size.
-        Dimension dim = super.getSize();
-        
-        //If the collision is scaled down, we want 
-        //  the image drawn centered on the collision box.
-        //This offsets the drawing of the image  
-        //  to be centered on the collision box.
-        double tweakX = dim.width  * (1.0 - CBOX_SCALE) / 2.0;
-        double tweakY = dim.height * (1.0 - CBOX_SCALE) / 2.0;
-        
-        super.draw(comp, 
-                page, 
-                offsetX + (int) tweakX, 
-                offsetY + (int) tweakY);
-    }
-    
     /**
      * True if the hero is on the ground.
      * @return the onGround
@@ -114,7 +94,7 @@ public class Hero extends Entity implements Dynamic {
     public void setOnGround(boolean onGround) {
         this.onGround = onGround;
     }
-    
+
     @Override
     public Rectangle getBounds() {
         Rectangle bounds = super.getBounds();
@@ -122,6 +102,17 @@ public class Hero extends Entity implements Dynamic {
 //        bounds.y -= (bounds.height * (1 - CBOX_SCALE) / 2);
 //        bounds.width  *= CBOX_SCALE;
 //        bounds.height *= CBOX_SCALE;
+        
+        return bounds;
+    }
+    
+    @Override
+    public Rectangle getCollisionBox() {
+        Rectangle bounds = super.getBounds();
+        bounds.x += (bounds.width  * (1 - CBOX_SCALE) / 2);
+        bounds.y += (bounds.height * (1 - CBOX_SCALE) / 2);
+        bounds.width  *= CBOX_SCALE;
+        bounds.height *= CBOX_SCALE;
         
         return bounds;
     }

@@ -204,6 +204,23 @@ public class Util {
     }
     
     /**
+     * Duplicate a pixel array (x,y,channel).
+     * @param source The array to duplicate.
+     * @param dest The array to copy into.
+     */
+    public static void copyPixelArray(double[][][] source, double[][][] dest) {
+        for (int x = 0; x < source.length; x++) {
+            for (int y = 0; y < source[0].length; y++) {
+                System.arraycopy(
+                        source[x][y], 0, 
+                        dest[x][y], 0, 
+                        source[0].length);
+            }
+        }
+        
+    }
+    
+    /**
      * Convert an Image into a BufferedImage, so that it's editable.
      * @param img the image to convert
      * @return the image as a BufferedImage

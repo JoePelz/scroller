@@ -1,12 +1,16 @@
 /** Joe Pelz, Set A, A00893517 */
 package core;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
 
+import core.creatures.Hero;
 import core.world.Level;
 
 /**
@@ -20,25 +24,21 @@ public class Renderer {
      * (because something has changed). */
     private boolean stale = true;
     
-    //store the background
-//    private Level background;
     /** Store the level. */
     private Level world;
-    //store the hero
-//    private Hero hero;
-    //store the creatures
-    //private ArrayList<Creature> creatures;
-    //store the props
-    //private ArrayList<Prop> prop;
     /** Store the lights and other static props. */
-    private ArrayList<Drawable> props = new ArrayList<Drawable>();
-    //store the effects
-//    private ArrayList<Effect> effects;
-    
+    private ArrayList<Drawable> staticProps = new ArrayList<Drawable>();
+    /** Store dynamic props. */
+    private ArrayList<Drawable> dynProps = new ArrayList<Drawable>();
+
     /** All static layers mixed. 0,0 is bottom left. */
     private double[][][] precomp;
     /** Final output image. 0,0 is top left. */
     private BufferedImage finComp;
+    /** Screen size image. */
+    private BufferedImage screen;
+    /** Graphics handle for the screen. */
+    private Graphics2D gScreen;
     /**
      * Constructor for an empty renderer.
      */
@@ -58,7 +58,7 @@ public class Renderer {
      */
     public void invalidate(Rectangle r) {
         updateComp(r);
-        updateImage2(r);
+        updateImage(r);
     }
     
     /**
@@ -80,12 +80,20 @@ public class Renderer {
      * Add a static prop to the world renderer.
      * @param prop The prop to add to the world.
      */
-    public void addProp(Drawable prop) {
-        props.add(prop);
+    public void addStaticProp(Drawable prop) {
+        staticProps.add(prop);
+    }
+    /**
+     * Add a static prop to the world renderer.
+     * @param prop The prop to add to the world.
+     */
+    public void addDynProp(Drawable prop) {
+        dynProps.add(prop);
     }
 
     /**
      * Update the final pixel array comp of the background.
+     * This includes the level and static props.
      */
     private void updateComp() {
 //        System.out.println("Updating everything.");
@@ -99,7 +107,7 @@ public class Renderer {
             }
         }
 
-        for (Drawable d : props) {
+        for (Drawable d : staticProps) {
 //            System.out.println("adding light at " + ((Light) d).getPos());
             if (d.isDrawn()) {
                 add(d.getPixels(), d.getBounds());
@@ -129,7 +137,7 @@ public class Renderer {
             }
         }
         
-        for (Drawable d : props) {
+        for (Drawable d : staticProps) {
 //            System.out.println("adding light at " + ((Light) d).getPos());
             if (d.isDrawn()) {
                 add(d.getPixels(), d.getBounds(), bounds);
@@ -221,7 +229,7 @@ public class Renderer {
      * After this (in finComp) 0,0 will be the top left, with +Y going down.
      * @param region The particular region of the image to update. 
      */
-    private void updateImage2(Rectangle region) {
+    private void updateImage(Rectangle region) {
         Util.pixelsToImage(precomp, finComp, region);
     }
     
@@ -238,9 +246,88 @@ public class Renderer {
             updateImage();
         }
         Rectangle bounds = world.getBounds();
-        g.drawImage(finComp, 
+        
+        if (screen == null 
+                || screen.getWidth() != comp.getWidth() 
+                || screen.getHeight() != comp.getHeight()) {
+            screen = new BufferedImage(
+                    comp.getWidth(), 
+                    comp.getWidth(), 
+                    BufferedImage.TYPE_4BYTE_ABGR);
+            gScreen = screen.createGraphics();
+        }
+        //black out the background
+        gScreen.setPaint(Color.black);
+        gScreen.fillRect(0, 0, screen.getWidth(), screen.getHeight());
+        //draw bg that covers screen
+        gScreen.drawImage(finComp, 
                 bounds.x - offsetX, 
                 bounds.y - bounds.height + offsetY + comp.getHeight(),
                 null);
+
+        mergeDynProps(offsetX, offsetY);
+
+        g.drawImage(screen, 
+                0, 
+                0,
+                null);
+    }
+
+    /**
+     * Merge dynamic props over the background.
+     * @param offsetX camera offset in X
+     * @param offsetY camera offset in Y
+     */
+    private void mergeDynProps(int offsetX, int offsetY) {
+        byte[] pixels = ((DataBufferByte) 
+                screen.getRaster()
+                .getDataBuffer()).getData();
+        Drawable heroDraw = dynProps.get(0);
+        Rectangle r = heroDraw.getBounds();
+        Hero hero = (Hero) heroDraw;
+        byte[] hPixels = ((DataBufferByte) 
+                hero.getBufferedImage().getRaster()
+                .getDataBuffer()).getData();
+        int col = 0;
+        int row = 0;
+        double mix;
+        double mixa;
+        int pi;
+        for (int i = 0; i < hPixels.length; i += Util.CHANNELS) {
+            pi = col + ((r.x - offsetX) << 2) 
+                 +  (row * screen.getWidth() << 2)
+                 +  ((screen.getHeight() 
+                     - (r.y - offsetY + r.height)) 
+                     * screen.getWidth() << 2);
+            if (pi < 0 || pi > pixels.length) {
+                System.out.println("caught a " + pi);
+                break;
+            }
+            if (hPixels[i] == (byte) -1) {
+                pixels[pi + Util.B] = hPixels[i + Util.B];
+                pixels[pi + Util.G] = hPixels[i + Util.G];
+                pixels[pi + Util.R] = hPixels[i + Util.R];
+            } else {
+                mix = (double) (hPixels[i] & Util.B_MAX) / Util.B_MAX;
+                mixa = 1.0 - mix;
+                pixels[pi + Util.B] = (byte)
+                        ((hPixels[i + Util.B] & Util.B_MAX) * mix 
+                       + (pixels[pi + Util.B] & Util.B_MAX) * mixa);
+                pixels[pi + Util.G] = (byte)
+                        ((hPixels[i + Util.G] & Util.B_MAX) * mix 
+                       + (pixels[pi + Util.G] & Util.B_MAX) * mixa);
+                pixels[pi + Util.R] = (byte)
+                        ((hPixels[i + Util.R] & Util.B_MAX) * mix 
+                       + (pixels[pi + Util.R] & Util.B_MAX) * mixa);
+            }
+            
+            col += Util.CHANNELS;
+            if (col >= r.width * Util.CHANNELS) {
+                col = 0;
+                row++;
+            }
+            
+            //System.out.println("Row: " + row + "; Col: " + col);
+        }
     }
 }

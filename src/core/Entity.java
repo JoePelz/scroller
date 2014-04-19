@@ -7,6 +7,7 @@ import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.awt.image.BufferedImage;
 
 /**
  * <p>Base class for drawable entities.  Stores position and image 
@@ -14,11 +15,15 @@ import java.awt.Rectangle;
  * @author Joe Pelz, Set A, A00893517
  * @version 1.0
  */
-public class Entity {
+public class Entity implements Drawable {
     /** The position of the entity. */
     private Point pos;
     /** The image that represents this entity. */
     private Image brush;
+    /** The image that represents this entity. */
+    private BufferedImage bi;
+    /** The image that represents this entity. */
+    private double[][][] pixels;
     
     /**
      * Constructor: initialized the entity at the origin, 
@@ -34,7 +39,18 @@ public class Entity {
      */
     public void setImage(Image image) {
         brush = image;
+        bi = Util.toBufferedImage(image);
+        pixels = new double[bi.getWidth()][bi.getHeight()][Util.CHANNELS];
+        Util.imageToPixels(Util.toBufferedImage(image), pixels);
     }
+    /**
+     * Get the buffered image to draw for this entity.
+     * @return The buffered image
+     */
+    public BufferedImage getBufferedImage() {
+        return bi;
+    }
+    
     /**
      * Get the width and height of the entity.
      * @return A new dimension object holding the width and height.
@@ -109,5 +125,21 @@ public class Entity {
         
 //        brush.paintIcon(comp, page, x, y);
         page.drawImage(brush, x, y, null);
+    }
+
+    @Override
+    public double[][][] getPixels() {
+        return pixels;
+    }
+
+    @Override
+    public short getDrawType() {
+        // TODO Auto-generated method stub
+        return 0;
+    }
+
+    @Override
+    public boolean isDrawn() {
+        return true;
     }
 }

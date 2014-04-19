@@ -1,8 +1,7 @@
 /** Joe Pelz, Set A, A00893517 */
 package core;
 
-import java.awt.Dimension;
-import java.awt.Point;
+import java.awt.Rectangle;
 
 /**
  * <p>This interface enforces an object meets all the requirements 
@@ -37,15 +36,10 @@ public interface Dynamic {
      */
     void applyDrag(double seconds);
     /**
-     * Get the size of the given object.
-     * @return the object's size
+     * Get the collision box the given object.
+     * @return the object's collision rectangle
      */
-    Dimension getSize();
-    /**
-     * Get the object's current position.
-     * @return a Point of the object's (x,y) position
-     */
-    Point getPos();
+    Rectangle getCollisionBox();
     /**
      * Directly move the object by an amount.
      * @param x How much to move in the x direction.

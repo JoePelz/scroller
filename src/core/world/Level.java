@@ -379,15 +379,15 @@ public class Level implements Drawable {
      * @return The distance to move to no longer be colliding.
      */
     public int escapeX(Dynamic obj, double velocity, Point impactZone) {
-        Point pos = obj.getPos();
+        Rectangle r = obj.getCollisionBox();
         int escape = 0; 
         //if the obj was moving right nudge it left into safety.
         if (velocity > 0) {
-            escape = (impactZone.x * CELL_SIZE - obj.getSize().width) - pos.x;
+            escape = (impactZone.x * CELL_SIZE - r.width) - r.x;
             
         //but if the obj was moving left nudge it right into safety.
         } else if (velocity < 0) {
-            escape = CELL_SIZE - (pos.x % CELL_SIZE);
+            escape = CELL_SIZE - (r.x % CELL_SIZE);
         }
 
         //Clamp the velocity;
@@ -406,16 +406,16 @@ public class Level implements Drawable {
      * @return The distance to move to no longer be colliding.
      */
     public int escapeY(Dynamic obj, double velocity, Point impactZone) {
-        Point pos = obj.getPos();
+        Rectangle r = obj.getCollisionBox();
         int escape = 0; 
 
         //if the obj was moving up nudge it down into safety.
         if (velocity > 0) {
-            escape = (impactZone.y * CELL_SIZE - obj.getSize().height) - pos.y;
+            escape = (impactZone.y * CELL_SIZE - r.height) - r.y;
             
         //but if the obj was moving down nudge it up into safety.
         } else if (velocity < 0) {
-            escape = CELL_SIZE - (pos.y % CELL_SIZE);
+            escape = CELL_SIZE - (r.y % CELL_SIZE);
         }
         
         //Clamp the velocity;

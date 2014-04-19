@@ -112,7 +112,7 @@ public class Engine extends JPanel implements Runnable {
         hero = new Hero();
         hero.setImage(tp.get(Texture.hero));
         hero.setPos(world.getStart());
-        
+        renderer.addDynProp(hero);
         renderer.setWorld(world);
         
         //init test light
@@ -125,7 +125,7 @@ public class Engine extends JPanel implements Runnable {
         for (Point light : bgLights) {
             tempLight = new Light(light.x + cso, light.y + cso, world);
             tempLight.setRadius((short) (Math.random() * rRange + rMin));
-            renderer.addProp(tempLight);
+            renderer.addStaticProp(tempLight);
             triggers.add(tempLight);
         }
 
@@ -147,7 +147,7 @@ public class Engine extends JPanel implements Runnable {
         
         renderer.draw(page, this, offX, offY);
         
-        hero.draw(this, page, offX, offY);
+//        hero.draw(this, page, offX, offY);
         
         for (Entity effect : effects) {
             if (effect instanceof Burst) {
@@ -166,16 +166,15 @@ public class Engine extends JPanel implements Runnable {
         page.drawString("y = " + (r.y + (r.height >> 1)), 
                 SCORE_PLACE_X + tab, 
                 SCORE_PLACE_Y);
+        page.drawString("Frame: " + frame, 
+                SCORE_PLACE_X, 
+                SCORE_PLACE_Y + lineHeight);
         
         
         if (!running) {
             page.drawString("Game over :(", 
                     WIDTH / 2, 
                     HEIGHT / 2);
-            page.drawString("Frame: " + frame, 
-                    SCORE_PLACE_X, 
-                    SCORE_PLACE_Y + lineHeight);
-            //draw this if game stops running. 
         }
     }
 
@@ -258,10 +257,10 @@ public class Engine extends JPanel implements Runnable {
      * @return the first collision found, if any. Null if none.
      */
     private Point getWorldCollision(Dynamic obj, Texture target) {
-        Point lowerLeft = new Point(obj.getPos());
-        Dimension d = obj.getSize();
-        Point upperRight = new Point(lowerLeft.x + d.width - 1, 
-                lowerLeft.y + d.height - 1);
+        Rectangle r = obj.getCollisionBox();
+        Point lowerLeft = new Point(r.x, r.y);
+        Point upperRight = new Point(r.x + r.width - 1, 
+                r.y + r.height - 1);
         int cell = World.CELL_SIZE;
 
         //If x is negative, offset by 1. It sucks but is necessary.
@@ -395,7 +394,7 @@ public class Engine extends JPanel implements Runnable {
      * It repeats until game over.
      */
     public void run() {
-
+        
         long start = System.nanoTime();
         long elapsed;
         long wait;
