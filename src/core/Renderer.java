@@ -16,16 +16,6 @@ import core.world.Level;
  * @version 1.0
  */
 public class Renderer {
-    /** The green offset in an integer color. */
-    private static final byte G_OFF = 8;
-    /** The red offset in an integer color. */
-    private static final byte R_OFF = 16;
-    /** The alpha offset in an integer color. */
-    private static final byte A_OFF = 24;
-    
-    /** 8-bit color channel maximum. */
-    private static final short MAX = 255;
-    
     /** If stale = true, the image needs to be redrawn 
      * (because something has changed). */
     private boolean stale = true;

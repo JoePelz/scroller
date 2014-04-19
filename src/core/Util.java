@@ -28,6 +28,8 @@ public class Util {
     public static final byte R = 3;
     /** The number of channels to include. */
     public static final byte CHANNELS = 4;
+    /** The number of bits per channel in an integer color. */
+    public static final byte BITS_PER_CHANNEL = 8;
     /** The size of a byte. */
     public static final short BYTE = 256;
     /** The highest value to store in a byte. */
@@ -107,42 +109,61 @@ public class Util {
     }
     
     /**
-     * Convert a pixel array to an image. This function assumes the array and image are compatible sizes...
+     * Convert a pixel array to an image. Raises IllegalArgumentException
+     * if the sizes don't match.
      * @param pixels The pixels to convert.
      * @param image The image to receive the converted pixels.
      */
     public static void pixelsToImage(double[][][] pixels, BufferedImage image) {
+        if (image.getWidth() != pixels.length 
+                || image.getHeight() != pixels[0].length) {
+            throw new IllegalArgumentException("Image size "
+                    + "does not match pixel array.");
+        }
         //boolean hasAlpha = image.getAlphaRaster() != null;
         
-        int row = pixels[0].length - 1; 
-        int col = 0; 
-        int cols = pixels.length;
-        int rows = pixels[0].length;
+        int y = pixels[0].length - 1; 
+        int x = 0; 
+        int width = pixels.length;
+        int height = pixels[0].length;
         
-        int[] dbPacked = new int[cols * rows];
+        int[] dbPacked = new int[width * height];
         
         for (int i = 0; i < dbPacked.length; i++) {
-            dbPacked[i] = toIntRGBA(pixels[col][row]);
+            dbPacked[i] = toIntRGBA(pixels[x][y]);
 
-            col++;
-            if (col == cols) {
-                col = 0;
-                row--;
+            x++;
+            if (x == width) {
+                x = 0;
+                y--;
             }
         }
-        WritableRaster r2 = Raster.createPackedRaster(DataBuffer.TYPE_INT, pixels.length, pixels[0].length, 4, 8, null);
-        r2.setDataElements(0, 0, pixels.length, pixels[0].length, dbPacked);
+        WritableRaster raster = Raster.createPackedRaster(DataBuffer.TYPE_INT, 
+                pixels.length, 
+                pixels[0].length, 
+                CHANNELS, 
+                BITS_PER_CHANNEL, 
+                null);
+        raster.setDataElements(0, 0, pixels.length, pixels[0].length, dbPacked);
         
-        image.setData(r2);
+        image.setData(raster);
     }
     
     /**
-     * Convert a pixel array to an image. This function assumes the array and image are compatible sizes...
+     * Convert a pixel array to an image. Raises IllegalArgumentException
+     * if the sizes don't match.
      * @param pixels The pixels to convert.
      * @param image The image to receive the converted pixels.
      * @param region The region to update in the image.
      */
-    public static void pixelsToImage(double[][][] pixels, BufferedImage image, Rectangle region) {
+    public static void pixelsToImage(double[][][] pixels, 
+                                     BufferedImage image, 
+                                     Rectangle region) {
+        if (image.getWidth() != pixels.length 
+                || image.getHeight() != pixels[0].length) {
+            throw new IllegalArgumentException("Image size "
+                    + "does not match pixel array.");
+        }
         //boolean hasAlpha = image.getAlphaRaster() != null;
         
         //Identify the boundary of the box (cropped to the image)
@@ -175,7 +196,7 @@ public class Util {
                 width, 
                 height, 
                 CHANNELS, 
-                8, 
+                BITS_PER_CHANNEL, 
                 new Point(left, rTop));
         r2.setDataElements(left, rTop, width, height, dbPacked);
         
@@ -219,41 +240,15 @@ public class Util {
         
         channel = (int) (argb[Util.B] * B_MAX);
         channel = Math.max(0, Math.min(channel, B_MAX));
-        color    += channel << 8;
+        color    += channel << (B * BITS_PER_CHANNEL);
         
         channel = (int) (argb[Util.G] * B_MAX);
         channel = Math.max(0, Math.min(channel, B_MAX));
-        color    += channel << 16;
+        color    += channel << (G * BITS_PER_CHANNEL);
         
         channel = (int) (argb[Util.R] * B_MAX);
         channel = Math.max(0, Math.min(channel, B_MAX));
-        color    += channel << 24;
-        
-        return color;
-    }
-
-    /**
-     * Convert a double[argb] to a single int color.
-     * @param argb the double[argb] that is storing a color
-     * @return A color-encoded integer.
-     */
-    public static int toIntARGB(double[] argb) {
-        
-        int channel = (int) (argb[Util.A] * B_MAX);
-        channel = Math.max(0, Math.min(channel, B_MAX));
-        int color = channel << 24;
-        
-        channel = (int) (argb[Util.B] * B_MAX);
-        channel = Math.max(0, Math.min(channel, B_MAX));
-        color    += channel << 0;
-        
-        channel = (int) (argb[Util.G] * B_MAX);
-        channel = Math.max(0, Math.min(channel, B_MAX));
-        color    += channel << 8;
-        
-        channel = (int) (argb[Util.R] * B_MAX);
-        channel = Math.max(0, Math.min(channel, B_MAX));
-        color    += channel << 16;
+        color    += channel << (R * BITS_PER_CHANNEL);
         
         return color;
     }

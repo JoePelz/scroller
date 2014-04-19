@@ -104,8 +104,8 @@ public class Engine extends JPanel implements Runnable {
         final int defHeight = 15;
 //        world = RandomLevel.genWorldHills(defWidth, defHeight, tp);
 //        world = RandomLevel.genWorldPlatform(defWidth, defHeight, tp);
-//        world = RandomLevel.genWorldRandom(defWidth, defHeight, tp);
-        world = new Level("house.txt", tp);
+        world = RandomLevel.genWorldRandom(defWidth, defHeight, tp);
+//        world = new Level("house.txt", tp);
 
         //init hero
         hero = new Hero();
