@@ -5,6 +5,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Point;
+import java.awt.Rectangle;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
@@ -118,8 +119,12 @@ public class Engine extends JPanel implements Runnable {
         Point[] bgLights = world.getAll(Texture.bgLightDead);
         Light tempLight;
         final int cso = 15; //Cell size offset.
+        final int rRange = 100;
+        final int rMin = 75;
+        
         for (Point light : bgLights) {
             tempLight = new Light(light.x + cso, light.y + cso, world);
+            tempLight.setRadius((short) (Math.random() * rRange + rMin));
             renderer.addProp(tempLight);
             triggers.add(tempLight);
         }
@@ -152,21 +157,16 @@ public class Engine extends JPanel implements Runnable {
         }
         
         //Draw hero position information
-        /*Point pos = hero.getPos();
-        Dimension size = hero.getSize();
-        page.drawString("hero MinX: " + pos.x, 
+        Rectangle r = hero.getBounds();
+        page.drawString("Position: x = " + (r.x + (r.width >> 1)), 
                 SCORE_PLACE_X, 
                 SCORE_PLACE_Y);
-        page.drawString("hero MinY: " + pos.y, 
-                SCORE_PLACE_X, 
-                SCORE_PLACE_Y + 20);
-        page.drawString("MaxX: " + (pos.x + size.width), 
-                SCORE_PLACE_X + 100, 
+        final int tab = 100; 
+        final int lineHeight = 20;
+        page.drawString("y = " + (r.y + (r.height >> 1)), 
+                SCORE_PLACE_X + tab, 
                 SCORE_PLACE_Y);
-        page.drawString("MaxY: " + (pos.y + size.height), 
-                SCORE_PLACE_X + 100, 
-                SCORE_PLACE_Y + 20);
-        */
+        
         
         if (!running) {
             page.drawString("Game over :(", 
@@ -174,7 +174,7 @@ public class Engine extends JPanel implements Runnable {
                     HEIGHT / 2);
             page.drawString("Frame: " + frame, 
                     SCORE_PLACE_X, 
-                    SCORE_PLACE_Y);
+                    SCORE_PLACE_Y + lineHeight);
             //draw this if game stops running. 
         }
     }
