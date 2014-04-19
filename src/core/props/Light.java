@@ -35,16 +35,16 @@ public class Light implements Trigger, Drawable {
     private boolean isActive;
 
     /** The red component of the light color. */
-    private int r = 210;
+    private double r;
     /** The green component of the light color. */
-    private int g = 180;
+    private double g;
     /** The blue component of the light color. */
-    private int b = 130;
+    private double b;
     /** The pixels for the visual overlay of the light. */
     private double[][][] pixels;
     
     /** The light radius, default 100. */
-    private short lightRadius = 100;
+    private short lightRadius;
     /** Handle to world, for manipulating. */
     private Level hLevel;
     /** The next time it is safe to trigger the light. */
@@ -59,12 +59,20 @@ public class Light implements Trigger, Drawable {
     public Light(int x, int y, Level handle) {
         hLevel = handle;
         pos = new Point(x, y);
+        wpos = new Point(x / Level.CELL_SIZE, y / Level.CELL_SIZE);
+        
         isActive = true;
         isOn = false;
-        wpos = new Point(x / Level.CELL_SIZE, y / Level.CELL_SIZE);
-        updateBounds();
-        pixels = new double[bounds.width][bounds.height][Util.CHANNELS];
-        updatePixels();
+        
+        //default color
+        final double defR = 0.8235;
+        final double defG = 0.7059;
+        final double defB = 0.5098;
+        setColor(defR, defG, defB);
+        
+        //default radius
+        final short defRadius = 100;
+        setRadius(defRadius);
     }
 
     /**
@@ -84,7 +92,7 @@ public class Light implements Trigger, Drawable {
      * @param green the green value for the light color.
      * @param blue the blue value for the light color.
      */
-    public void setColor(int red, int green, int blue) {
+    public void setColor(double red, double green, double blue) {
         r = red;
         g = green;
         b = blue;
@@ -96,6 +104,16 @@ public class Light implements Trigger, Drawable {
      */
     public int getColor() {
         return ((int) r) << R_SHIFT + ((int) g) << G_SHIFT + (int) b; 
+    }
+    
+    /**
+     * Set the light radius for the light.
+     * @param radius The light range
+     */
+    private void setRadius(short radius) {
+        lightRadius = radius;
+        updateBounds();
+        updatePixels();
     }
     
     /**
@@ -201,9 +219,9 @@ public class Light implements Trigger, Drawable {
                 distance = Math.max(0, 1 - (distance / lightRadius));
                 distance = Math.pow(distance, 2);
 
-                dR = distance * r / 255.0;
-                dG = distance * g / 255.0;
-                dB = distance * b / 255.0;
+                dR = distance * r;
+                dG = distance * g;
+                dB = distance * b;
                 pixels[x][y][Util.R] = dR;
                 pixels[x][y][Util.G] = dG;
                 pixels[x][y][Util.B] = dB;
