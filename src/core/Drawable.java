@@ -18,6 +18,11 @@ public interface Drawable {
      */
     double[][][] getPixels();
     /**
+     * Get the abgr pixels of the entity. 
+     * @return A byte array of {a,b,g,r,a,b,g,r...}. 
+     */
+    byte[] getData();
+    /**
      * Get the bounds of the Drawable in pixel coordinates. 
      * x is the left edge,
      * y is the BOTTOM edge.

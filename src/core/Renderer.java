@@ -241,10 +241,13 @@ public class Renderer {
      * @param offsetY The camera position, or world offset, in Y
      */
     public void draw(Graphics g, Component comp, int offsetX, int offsetY) {
+
         if (stale) {
             updateComp();
             updateImage();
         }
+        
+        
         Rectangle bounds = world.getBounds();
         
         if (screen == null 
@@ -252,10 +255,12 @@ public class Renderer {
                 || screen.getHeight() != comp.getHeight()) {
             screen = new BufferedImage(
                     comp.getWidth(), 
-                    comp.getWidth(), 
+                    comp.getHeight(), 
                     BufferedImage.TYPE_4BYTE_ABGR);
             gScreen = screen.createGraphics();
         }
+
+        
         //black out the background
         gScreen.setPaint(Color.black);
         gScreen.fillRect(0, 0, screen.getWidth(), screen.getHeight());
@@ -265,12 +270,16 @@ public class Renderer {
                 bounds.y - bounds.height + offsetY + comp.getHeight(),
                 null);
 
+        
         mergeDynProps(offsetX, offsetY);
 
+        
         g.drawImage(screen, 
                 0, 
                 0,
                 null);
+
+        
     }
 
     /**
@@ -279,15 +288,26 @@ public class Renderer {
      * @param offsetY camera offset in Y
      */
     private void mergeDynProps(int offsetX, int offsetY) {
+        for (Drawable prop : dynProps) {
+            mergeDynProp(prop, offsetX, offsetY);
+        }
+    }
+    
+    /**
+     * Merge a dynamic prop over the background.
+     * @param prop The prop to draw onto the screen
+     * @param offsetX camera offset in X
+     * @param offsetY camera offset in Y
+     */
+    private void mergeDynProp(Drawable prop, int offsetX, int offsetY) {
         byte[] pixels = ((DataBufferByte) 
-                screen.getRaster()
-                .getDataBuffer()).getData();
-        Drawable heroDraw = dynProps.get(0);
-        Rectangle r = heroDraw.getBounds();
-        Hero hero = (Hero) heroDraw;
-        byte[] hPixels = ((DataBufferByte) 
-                hero.getBufferedImage().getRaster()
-                .getDataBuffer()).getData();
+                            screen
+                            .getRaster()
+                            .getDataBuffer())
+                            .getData();
+        Rectangle r = prop.getBounds();
+        byte[] hPixels = prop.getData();
+        
         int col = 0;
         int row = 0;
         double mix;

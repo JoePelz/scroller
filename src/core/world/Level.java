@@ -430,4 +430,10 @@ public class Level implements Drawable {
         //always draw the level.
         return true;
     }
+
+    @Override
+    public byte[] getData() {
+        // TODO Auto-generated method stub
+        return null;
+    }
 }

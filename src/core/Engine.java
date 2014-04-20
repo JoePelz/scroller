@@ -176,6 +176,7 @@ public class Engine extends JPanel implements Runnable {
                     WIDTH / 2, 
                     HEIGHT / 2);
         }
+        
     }
 
     /**

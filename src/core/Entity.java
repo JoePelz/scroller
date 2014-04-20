@@ -8,6 +8,7 @@ import java.awt.Image;
 import java.awt.Point;
 import java.awt.Rectangle;
 import java.awt.image.BufferedImage;
+import java.awt.image.DataBufferByte;
 
 /**
  * <p>Base class for drawable entities.  Stores position and image 
@@ -21,9 +22,9 @@ public class Entity implements Drawable {
     /** The image that represents this entity. */
     private Image brush;
     /** The image that represents this entity. */
-    private BufferedImage bi;
-    /** The image that represents this entity. */
     private double[][][] pixels;
+    /** The image data, in byte array. */
+    private byte[] data;
     
     /**
      * Constructor: initialized the entity at the origin, 
@@ -39,16 +40,15 @@ public class Entity implements Drawable {
      */
     public void setImage(Image image) {
         brush = image;
-        bi = Util.toBufferedImage(image);
-        pixels = new double[bi.getWidth()][bi.getHeight()][Util.CHANNELS];
-        Util.imageToPixels(Util.toBufferedImage(image), pixels);
-    }
-    /**
-     * Get the buffered image to draw for this entity.
-     * @return The buffered image
-     */
-    public BufferedImage getBufferedImage() {
-        return bi;
+        pixels = new double[image.getWidth(null)]
+                           [image.getHeight(null)]
+                           [Util.CHANNELS];
+        Util.imageToPixels(Util.toBufferedImage(image), pixels); 
+        
+        BufferedImage bi = Util.toBufferedImage(brush);
+        data = ((DataBufferByte) 
+                bi.getRaster()
+                .getDataBuffer()).getData();
     }
     
     /**
@@ -141,5 +141,10 @@ public class Entity implements Drawable {
     @Override
     public boolean isDrawn() {
         return true;
+    }
+
+    @Override
+    public byte[] getData() {
+        return data;
     }
 }

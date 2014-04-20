@@ -3,6 +3,7 @@ package core.props;
 
 import java.awt.Point;
 import java.awt.Rectangle;
+import java.util.Random;
 
 import core.Drawable;
 import core.Texture;
@@ -65,10 +66,13 @@ public class Light implements Trigger, Drawable {
         isOn = false;
         
         //default color
-        final double defR = 0.8235;
-        final double defG = 0.7059;
-        final double defB = 0.5098;
-        setColor(defR, defG, defB);
+//        final double defR = 0.8235;
+//        final double defG = 0.7059;
+//        final double defB = 0.5098;
+//        setColor(defR, defG, defB);
+        Random gen = new Random();
+        setColor(gen.nextDouble(), gen.nextDouble(), gen.nextDouble());
+        
         
         //default radius
         final short defRadius = 100;
@@ -261,5 +265,11 @@ public class Light implements Trigger, Drawable {
     @Override
     public boolean isDrawn() {
         return isOn;
+    }
+
+    @Override
+    public byte[] getData() {
+        // TODO Auto-generated method stub
+        return null;
     }
 }
