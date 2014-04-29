@@ -10,7 +10,6 @@ import java.awt.image.BufferedImage;
 import java.awt.image.DataBufferByte;
 import java.util.ArrayList;
 
-import core.creatures.Hero;
 import core.world.Level;
 
 /**
