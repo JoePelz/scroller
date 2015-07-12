@@ -13,13 +13,13 @@ import java.util.ArrayList;
 import core.world.Level;
 
 /**
- * <p>This class handles rendering and translates pixel arrays 
+ * <p>This class handles rendering and translates pixel arrays
  * into images.</p>
  * @author Joe Pelz, Set A, A00893517
  * @version 1.0
  */
 public class Renderer {
-    /** If stale = true, the image needs to be redrawn 
+    /** If stale = true, the image needs to be redrawn
      * (because something has changed). */
     private boolean stale = true;
     

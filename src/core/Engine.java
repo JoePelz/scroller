@@ -9,6 +9,7 @@ import java.awt.Rectangle;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.util.ArrayList;
+import java.util.Random;
 
 import javax.swing.JPanel;
 
@@ -50,7 +51,7 @@ public class Engine extends JPanel implements Runnable {
     /** Score offset distance in pixels. (y direction) */
     private static final int SCORE_PLACE_Y = 20;
     
-    /** gravitational force (9.8 m/s). * 30 pixels per meter. */
+    /** gravitational force. */
     private static final double GRAVITY = -1200;
     /** Hero movement force. */
     private static final double SPEED = 1000;
@@ -69,7 +70,7 @@ public class Engine extends JPanel implements Runnable {
     /** frame counter. */
     private int frame;
     /** How many milliseconds between frames. */
-    private long targetTime = MS_PER_S / INIT_FPS;
+    private static final long targetTime = MS_PER_S / INIT_FPS;
     
     /** The rendering engine. */
     private Renderer renderer = new Renderer();
@@ -103,10 +104,18 @@ public class Engine extends JPanel implements Runnable {
         //init world
         final int defWidth = 150;
         final int defHeight = 15;
-//        world = RandomLevel.genWorldHills(defWidth, defHeight, tp);
-//        world = RandomLevel.genWorldPlatform(defWidth, defHeight, tp);
-//        world = RandomLevel.genWorldRandom(defWidth, defHeight, tp);
-        world = new Level("house.txt", tp);
+        final Random gen = new Random();
+        //50% random, 25% hills, 25% platform
+        if (gen.nextBoolean()) {
+          world = RandomLevel.genWorldRandom(defWidth, defHeight, tp);
+        } else {
+            if (gen.nextBoolean()) {
+                world = RandomLevel.genWorldHills(defWidth, defHeight, tp);
+            } else {
+                world = RandomLevel.genWorldPlatform(defWidth, defHeight, tp);
+            }
+        }
+//        world = new Level("house.txt", tp);
 
         //init hero
         hero = new Hero();
@@ -150,10 +159,11 @@ public class Engine extends JPanel implements Runnable {
 //        hero.draw(this, page, offX, offY);
         
         for (Entity effect : effects) {
-            if (effect instanceof Burst) {
+            effect.draw(this, page, offX, offY);
+            /*if (effect instanceof Burst) {
                 Burst pop = (Burst) effect;
                 pop.draw(this, page, offX, offY);
-            }
+            }*/
         }
         
         //Draw hero position information
